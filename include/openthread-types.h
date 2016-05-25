@@ -1,28 +1,29 @@
 /*
- *    Copyright (c) 2016, Nest Labs, Inc.
- *    All rights reserved.
+ *  Copyright (c) 2016, Nest Labs, Inc.
+ *  All rights reserved.
  *
- *    Redistribution and use in source and binary forms, with or without
- *    modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *    3. Neither the name of the copyright holder nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
  *
- *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- *    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
- *    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- *    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- *    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -35,6 +36,7 @@
 #define OPENTHREAD_TYPES_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,8 +63,63 @@ typedef enum ThreadError
     kThreadError_NotImplemented = 13,
     kThreadError_InvalidState = 14,
     kThreadError_NoTasklets = 15,
+
+    /**
+     * No acknowledgment was received after macMaxFrameRetries (IEEE 802.15.4-2006).
+     */
+    kThreadError_NoAck = 16,
+
+    /**
+     * A transmission could not take place due to activity on the channel, i.e., the CSMA-CA mechanism has failed
+     * (IEEE 802.15.4-2006).
+     */
+    kThreadError_ChannelAccessFailure = 17,
+
     kThreadError_Error = 255,
 } ThreadError;
+
+
+#define OT_EXT_ADDRESS_SIZE   8   ///< Size of an IEEE 802.15.4 Extended Address (bytes)
+#define OT_EXT_PAN_ID_SIZE    8   ///< Size of a Thread PAN ID (bytes)
+#define OT_NETWORK_NAME_SIZE  16  ///< Size of the Thread Network Name field (bytes)
+
+/**
+ * This type represents the IEEE 802.15.4 PAN ID.
+ *
+ */
+typedef uint16_t otPanId;
+
+/**
+ * This type represents the IEEE 802.15.4 Short Address.
+ *
+ */
+typedef uint16_t otShortAddress;
+
+/**
+ * This type represents the IEEE 802.15.4 Extended Address.
+ *
+ */
+typedef struct otExtAddress
+{
+    uint8_t m8[OT_EXT_ADDRESS_SIZE];  ///< IEEE 802.15.4 Extended Address bytes
+} otExtAddress;
+
+/**
+ * This struct represents a received IEEE 802.15.4 Beacon.
+ *
+ */
+typedef struct otActiveScanResult
+{
+    otExtAddress   mExtAddress;      ///< IEEE 802.15.4 Extended Address
+    const char    *mNetworkName;     ///< Thread Network Name
+    const uint8_t *mExtPanId;        ///< Thread Extended PAN ID
+    uint16_t       mPanId;           ///< IEEE 802.15.4 PAN ID
+    uint8_t        mChannel;         ///< IEEE 802.15.4 Channel
+    int8_t         mRssi;            ///< RSSI (dBm)
+    uint8_t        mVersion : 4;     ///< Version
+    bool           mIsNative : 1;    ///< Native Commissioner flag
+    bool           mIsJoinable : 1;  ///< Joining Permitted flag
+} otActiveScanResult;
 
 /**
  * @addtogroup config  Configuration
@@ -268,14 +325,14 @@ typedef enum otMleAttachFilter
 /**
  * Represents a Thread device role.
  */
-enum otDeviceRole
+typedef enum
 {
     kDeviceRoleDisabled,  ///< The Thread stack is disabled.
     kDeviceRoleDetached,  ///< Not currently participating in a Thread network/partition.
     kDeviceRoleChild,     ///< The Thread Child role.
     kDeviceRoleRouter,    ///< The Thread Router role.
     kDeviceRoleLeader,    ///< The Thread Leader role.
-};
+} otDeviceRole;
 
 /**
  * @}

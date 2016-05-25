@@ -1,28 +1,29 @@
 /*
- *    Copyright (c) 2016, Nest Labs, Inc.
- *    All rights reserved.
+ *  Copyright (c) 2016, Nest Labs, Inc.
+ *  All rights reserved.
  *
- *    Redistribution and use in source and binary forms, with or without
- *    modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *    3. Neither the name of the copyright holder nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
  *
- *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- *    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
- *    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- *    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- *    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <fcntl.h>
@@ -50,10 +51,21 @@ extern struct gengetopt_args_info args_info;
 static uint8_t s_receive_buffer[128];
 static int s_in_fd;
 static int s_out_fd;
-static struct termios s_in_termios;
-static struct termios s_out_termios;
 static pthread_t s_pthread;
 static sem_t *s_semaphore;
+
+static struct termios original_stdin_termios;
+static struct termios original_stdout_termios;
+
+static void restore_stdin_termios()
+{
+    tcsetattr(s_in_fd, TCSAFLUSH, &original_stdin_termios);
+}
+
+static void restore_stdout_termios()
+{
+    tcsetattr(s_out_fd, TCSAFLUSH, &original_stdout_termios);
+}
 
 ThreadError otPlatSerialEnable(void)
 {
@@ -67,6 +79,18 @@ ThreadError otPlatSerialEnable(void)
         s_in_fd = dup(STDIN_FILENO);
         s_out_fd = dup(STDOUT_FILENO);
         dup2(STDERR_FILENO, STDOUT_FILENO);
+
+        if (isatty(s_in_fd))
+        {
+            tcgetattr(s_in_fd, &original_stdin_termios);
+            atexit(&restore_stdin_termios);
+        }
+
+        if (isatty(s_out_fd))
+        {
+            tcgetattr(s_out_fd, &original_stdin_termios);
+            atexit(&restore_stdout_termios);
+        }
     }
     else
     {
@@ -98,67 +122,53 @@ ThreadError otPlatSerialEnable(void)
         VerifyOrExit(isatty(s_in_fd), error = kThreadError_Error);
 
         s_out_fd = dup(s_in_fd);
+    }
 
-        if (isatty(s_in_fd))
-        {
-            // get current configuration
-            VerifyOrExit(tcgetattr(s_in_fd, &termios) == 0, perror("tcgetattr"); error = kThreadError_Error);
-            s_in_termios = termios;
+    if (isatty(s_in_fd))
+    {
+        // get current configuration
+        VerifyOrExit(tcgetattr(s_in_fd, &termios) == 0, perror("tcgetattr"); error = kThreadError_Error);
 
-            // turn off input processing
-            termios.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
+        // turn off input processing
+        termios.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
 
-            // turn off output processing
-            termios.c_oflag = 0;
+        // turn off line processing
+        termios.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN);
 
-            // turn off line processing
-            termios.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
+        // turn off character processing
+        termios.c_cflag &= ~(CSIZE | PARENB);
+        termios.c_cflag |= CS8 | HUPCL | CREAD | CLOCAL;
 
-            // turn off character processing
-            termios.c_cflag &= ~(CSIZE | PARENB);
-            termios.c_cflag |= CS8;
+        // return 1 byte at a time
+        termios.c_cc[VMIN]  = 1;
 
-            // return 1 byte at a time
-            termios.c_cc[VMIN]  = 1;
+        // turn off inter-character timer
+        termios.c_cc[VTIME] = 0;
 
-            // turn off inter-character timer
-            termios.c_cc[VTIME] = 0;
+        // configure baud rate
+        VerifyOrExit(cfsetispeed(&termios, B115200) == 0, perror("cfsetispeed"); error = kThreadError_Error);
 
-            // configure baud rate
-            VerifyOrExit(cfsetispeed(&termios, B115200) == 0, perror("cfsetispeed"); error = kThreadError_Error);
+        // set configuration
+        VerifyOrExit(tcsetattr(s_in_fd, TCSANOW, &termios) == 0, perror("tcsetattr"); error = kThreadError_Error);
+    }
 
-            // set configuration
-            VerifyOrExit(tcsetattr(s_in_fd, TCSAFLUSH, &termios) == 0, perror("tcsetattr"); error = kThreadError_Error);
-        }
+    if (isatty(s_out_fd))
+    {
+        // get current configuration
+        VerifyOrExit(tcgetattr(s_out_fd, &termios) == 0, perror("tcgetattr"); error = kThreadError_Error);
 
-        if (isatty(s_out_fd))
-        {
-            // get current configuration
-            VerifyOrExit(tcgetattr(s_out_fd, &termios) == 0, perror("tcgetattr"); error = kThreadError_Error);
-            s_out_termios = termios;
+        // turn off output processing
+        termios.c_oflag = 0;
 
-            // turn off output processing
-            termios.c_oflag = 0;
+        // turn off character processing
+        termios.c_cflag &= ~(CSIZE | PARENB);
+        termios.c_cflag |= CS8 | HUPCL | CREAD | CLOCAL;
 
-            // turn off line processing
-            termios.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
+        // configure baud rate
+        VerifyOrExit(cfsetospeed(&termios, B115200) == 0, perror("cfsetospeed"); error = kThreadError_Error);
 
-            // turn off character processing
-            termios.c_cflag &= ~(CSIZE | PARENB);
-            termios.c_cflag |= CS8;
-
-            // return 1 byte at a time
-            termios.c_cc[VMIN]  = 1;
-
-            // turn off inter-character timer
-            termios.c_cc[VTIME] = 0;
-
-            // configure baud rate
-            VerifyOrExit(cfsetospeed(&termios, B115200) == 0, perror("cfsetospeed"); error = kThreadError_Error);
-
-            // set configuration
-            VerifyOrExit(tcsetattr(s_out_fd, TCSAFLUSH, &termios) == 0, perror("tcsetattr"); error = kThreadError_Error);
-        }
+        // set configuration
+        VerifyOrExit(tcsetattr(s_out_fd, TCSANOW, &termios) == 0, perror("tcsetattr"); error = kThreadError_Error);
     }
 
     snprintf(cmd, sizeof(cmd), "thread_serial_semaphore_%d", args_info.nodeid_arg);
@@ -223,18 +233,8 @@ void *serial_receive_thread(void *aContext)
 const uint8_t *otPlatSerialGetReceivedBytes(uint16_t *aBufLength)
 {
     size_t length;
-    int i;
 
     length = read(s_in_fd, s_receive_buffer, sizeof(s_receive_buffer));
-
-    for (i = 0; i < length; i++)
-    {
-        if (s_receive_buffer[i] == 0x03)
-        {
-            otPlatSerialDisable();
-            exit(0);
-        }
-    }
 
     if (aBufLength != NULL)
     {

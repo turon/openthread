@@ -27,88 +27,53 @@
 
 /**
  * @file
- *   This file includes definitions for computing HMACs.
+ *   This file contains definitions for an FLEN/HDLC interface to the OpenThread stack.
  */
 
-#ifndef HMAC_HPP_
-#define HMAC_HPP_
+#ifndef NCP_HPP_
+#define NCP_HPP_
 
-#include <stdint.h>
-
-#include <openthread-types.h>
-#include <crypto/hash.hpp>
+#include <ncp/ncp_base.hpp>
+#include <ncp/flen.hpp>
+#include <ncp/hdlc.hpp>
 
 namespace Thread {
-namespace Crypto {
 
-/**
- * @addtogroup core-security
- *
- * @{
- *
- */
-
-/**
- * This class implements HMAC computation.
- *
- */
-class Hmac
+class Ncp : public NcpBase
 {
+    typedef NcpBase super_t;
+
 public:
-    /**
-     * This constructor intializes the object.
-     *
-     */
-    explicit Hmac(Hash &aHash);
+    Ncp();
 
-    /**
-     * This method sets the key.
-     *
-     * @param[in]  aKey        A pointer to the key.
-     * @param[in]  aKeyLength  The key length in bytes.
-     *
-     */
-    void SetKey(const void *aKey, uint16_t aKeyLength);
+    ThreadError Start();
+    ThreadError Stop();
 
-    /**
-     * This method initializes the HMAC computation.
-     *
-     */
-    void Init(void);
 
-    /**
-     * This method inputs bytes into the HMAC computation.
-     *
-     * @param[in]  aBuf        A pointer to the input buffer.
-     * @param[in]  aBufLength  The length of @p aBuf in bytes.
-     *
-     */
-    void Input(const void *aBuf, uint16_t aBufLength);
+    virtual ThreadError OutboundFrameBegin(void);
+    virtual uint16_t OutboundFrameGetRemaining(void);
+    virtual ThreadError OutboundFrameFeedData(const uint8_t *frame, uint16_t frameLength);
+    virtual ThreadError OutboundFrameFeedMessage(Message &message);
+    virtual ThreadError OutboundFrameSend(void);
 
-    /**
-     * This method finalizes the hash computation.
-     *
-     * @param[out]  aHash  A pointer to the output buffer.
-     *
-     */
-    void Finalize(uint8_t *aHash);
+    static void HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength);
+    static void SendDoneTask(void *context);
+    static void ReceiveTask(void *context);
 
 private:
-    enum
-    {
-        kMaxKeyLength = 64,
-    };
-    uint8_t mKey[kMaxKeyLength];
-    uint8_t mKeyLength = 0;
-    Hash *mHash;
+    void HandleFrame(uint8_t *aBuf, uint16_t aBufLength);
+    void SendDoneTask();
+    void ReceiveTask();
+
+    Hdlc::Encoder mFrameEncoder;
+    Hdlc::Decoder mFrameDecoder;
+
+    uint8_t mSendFrame[1500];
+    uint8_t mReceiveFrame[1500];
+    uint8_t *mSendFrameIter;
+    Message *mSendMessage;
 };
 
-/**
- * @}
- *
- */
-
-}  // namespace Crypto
 }  // namespace Thread
 
-#endif  // CRYPTO_HMAC_HPP_
+#endif  // NCP_HPP_

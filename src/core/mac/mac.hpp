@@ -1,28 +1,29 @@
 /*
- *    Copyright (c) 2016, Nest Labs, Inc.
- *    All rights reserved.
+ *  Copyright (c) 2016, Nest Labs, Inc.
+ *  All rights reserved.
  *
- *    Redistribution and use in source and binary forms, with or without
- *    modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *    3. Neither the name of the copyright holder nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
  *
- *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- *    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
- *    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- *    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- *    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -64,36 +65,21 @@ namespace Mac {
  */
 enum
 {
-    kMinBE                = 3,    ///< macMinBE (IEEE 802.15.4-2006)
-    kMaxBE                = 6,    ///< macMaxBE (IEEE 802.15.4-2006)
-    kMaxCSMABackoffs      = 12,   ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
-    kUnitBackoffPeriod    = 20,   ///< Number of symbols (IEEE 802.15.4-2006)
+    kMinBE                = 3,                     ///< macMinBE (IEEE 802.15.4-2006)
+    kMaxBE                = 6,                     ///< macMaxBE (IEEE 802.15.4-2006)
+    kMaxCSMABackoffs      = 4,                     ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
+    kMaxFrameRetries      = 15,                    ///< macMaxFrameRetries (IEEE 802.15.4-2006)
+    kUnitBackoffPeriod    = 20,                    ///< Number of symbols (IEEE 802.15.4-2006)
 
-    kMinBackoff           = 16,   ///< Minimum backoff (milliseconds).
+    kMinBackoff           = 16,                    ///< Minimum backoff (milliseconds).
+    kMaxFrameAttempts     = kMaxFrameRetries + 1,  ///< Number of transmission attempts.
 
-    kAckTimeout           = 16,   ///< Timeout for waiting on an ACK (milliseconds).
-    kDataPollTimeout      = 100,  ///< Timeout for receivint Data Frame (milliseconds).
-    kNonceSize            = 13,   ///< Size of IEEE 802.15.4 Nonce (bytes).
+    kAckTimeout           = 16,                    ///< Timeout for waiting on an ACK (milliseconds).
+    kDataPollTimeout      = 100,                   ///< Timeout for receivint Data Frame (milliseconds).
+    kNonceSize            = 13,                    ///< Size of IEEE 802.15.4 Nonce (bytes).
 
-    kScanChannelMaskAll   = 0xffff,
-    kScanDefaultInterval  = 128,  ///< Default interval between channels (milliseconds).
-
-    kNetworkNameSize      = 16,   ///< Size of Thread Network Name (bytes).
-    kExtPanIdSize         = 8,    ///< Size of Thread Extended PAN ID.
-};
-
-/**
- * This structure represents an Active Scan result.
- *
- */
-struct ActiveScanResult
-{
-    char     mNetworkName[kNetworkNameSize];  ///<  The Thread Network Name.
-    uint8_t  mExtPanid[kExtPanIdSize];        ///<  The Thread Extended PAN ID.
-    uint8_t  mExtAddr[ExtAddress::kLength];   ///<  The IEEE 802.15.4 Extended Address.
-    uint16_t mPanId;                          ///<  The IEEE 802.15.4 PAN ID.
-    uint8_t  mChannel;                        ///<  The IEEE 802.15.4 Channel.
-    int8_t   mRssi;                           ///<  The RSSI in dBm.
+    kScanChannelsAll      = 0xffff,                ///< All channels.
+    kScanDurationDefault  = 200,                   ///< Default interval between channels (milliseconds).
 };
 
 /**
@@ -204,43 +190,24 @@ public:
     explicit Mac(ThreadNetif &aThreadNetif);
 
     /**
-     * This method starts the MAC.
-     *
-     * @retval kThreadError_None  Successfully started the MAC.
-     * @retval kThreadError_Busy  The MAC could not be started.
-     *
-     */
-    ThreadError Start(void);
-
-    /**
-     * This method stops the MAC.
-     *
-     * @retval kThreadError_None  Successfully stopped the MAC.
-     * @retval kThreadError_Busy  The MAC could not be stopped.
-     *
-     */
-    ThreadError Stop(void);
-
-    /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
-     * @param[in]  aResult   A reference to the Active Scan result.
+     * @param[in]  aContext       A pointer to arbitrary context information.
+     * @param[in]  aBeaconFrame   A pointer to the Beacon frame.
      *
      */
-    typedef void (*ActiveScanHandler)(void *aContext, ActiveScanResult *aResult);
+    typedef void (*ActiveScanHandler)(void *aContext, Frame *aBeaconFrame);
 
     /**
      * This method starts an IEEE 802.15.4 Active Scan.
      *
-     * @param[in]  aIntervalPerChannel  The time in milliseconds to spend scanning each channel.
-     * @param[in]  aChannelMask         A bit vector indicating which channels to scan.
-     * @param[in]  aHandler             A pointer to a function that is called on receiving an IEEE 802.15.4 Beacon.
-     * @param[in]  aContext             A pointer to arbitrary context information.
+     * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
+     * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
+     * @param[in]  aHandler       A pointer to a function that is called on receiving an IEEE 802.15.4 Beacon.
+     * @param[in]  aContext       A pointer to arbitrary context information.
      *
      */
-    ThreadError ActiveScan(uint16_t aIntervalPerChannel, uint16_t aChannelMask,
-                           ActiveScanHandler aHandler, void *aContext);
+    ThreadError ActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
 
     /**
      * This method indicates whether or not rx-on-when-idle is enabled.
@@ -287,6 +254,16 @@ public:
      *
      */
     const ExtAddress *GetExtAddress(void) const;
+
+    /**
+     * This method sets the IEEE 802.15.4 Extended Address
+     *
+     * @param[in]  aExtAddress  A reference to the IEEE 802.15.4 Extended Address.
+     *
+     * @retval kThreadError_None  Successfully set the IEEE 802.15.4 Extended Address.
+     *
+     */
+    ThreadError SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
      * This method returns the IEEE 802.15.4 Short Address.
@@ -402,6 +379,12 @@ public:
      */
     static void TransmitDoneTask(void *aContext);
 
+    /**
+     * This method returns if an active scan is in progress.
+     *
+     */
+    bool IsActiveScanInProgress(void);
+
 private:
     void GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
     void NextOperation(void);
@@ -412,7 +395,6 @@ private:
     void SendBeaconRequest(Frame &aFrame);
     void SendBeacon(Frame &aFrame);
     void StartBackoff(void);
-    void HandleBeaconFrame(void);
     ThreadError HandleMacCommand(void);
 
     static void HandleAckTimer(void *aContext);
@@ -437,10 +419,10 @@ private:
 
     ExtAddress mExtAddress;
     ShortAddress mShortAddress;
-    uint16_t mPanId;
-    uint8_t mExtendedPanid[kExtPanIdSize];
-    char mNetworkName[kNetworkNameSize];
+    PanId mPanId;
     uint8_t mChannel;
+
+    Beacon mBeacon;
 
     Frame mSendFrame;
     Frame mReceiveFrame;
@@ -449,8 +431,7 @@ private:
 
     enum
     {
-        kStateDisabled = 0,
-        kStateIdle,
+        kStateIdle = 0,
         kStateActiveScan,
         kStateTransmitBeacon,
         kStateTransmitData,
@@ -461,12 +442,13 @@ private:
     uint8_t mDataSequence;
     bool mRxOnWhenIdle;
     uint8_t mCsmaAttempts;
+    uint8_t mTransmitAttempts;
     bool mTransmitBeacon;
 
     bool mActiveScanRequest;
     uint8_t mScanChannel;
-    uint16_t mScanChannelMask;
-    uint16_t mScanIntervalPerChannel;
+    uint16_t mScanChannels;
+    uint16_t mScanDuration;
     ActiveScanHandler mActiveScanHandler;
     void *mActiveScanContext;
 

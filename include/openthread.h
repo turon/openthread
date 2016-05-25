@@ -1,28 +1,29 @@
 /*
- *    Copyright (c) 2016, Nest Labs, Inc.
- *    All rights reserved.
+ *  Copyright (c) 2016, Nest Labs, Inc.
+ *  All rights reserved.
  *
- *    Redistribution and use in source and binary forms, with or without
- *    modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *    3. Neither the name of the copyright holder nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
  *
- *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- *    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
- *    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- *    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- *    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -35,6 +36,7 @@
 #define OPENTHREAD_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <openthread-types.h>
 
@@ -50,6 +52,7 @@ extern "C" {
  * @{
  *
  * @defgroup execution Execution
+ * @defgroup commands Commands
  * @defgroup config Configuration
  * @defgroup diags Diagnostics
  * @defgroup messages Message Buffers
@@ -108,7 +111,7 @@ extern "C" {
 /**
  * Initialize the OpenThread library.
  */
-void otInit();
+void otInit(void);
 
 /**
  * Run the next queued tasklet in OpenThread.
@@ -128,6 +131,64 @@ bool otAreTaskletsPending(void);
  *
  */
 extern void otSignalTaskletPending(void);
+
+/**
+ * @}
+ *
+ */
+
+/**
+ * @addtogroup commands  Commands
+ *
+ * @brief
+ *   This module includes functions for OpenThread commands.
+ *
+ * @{
+ *
+ */
+
+/**
+ * Enable the Thread interface.
+ *
+ * @retval kThreadErrorNone  Successfully enabled the Thread interface.
+ */
+ThreadError otEnable(void);
+
+/**
+ * Disable the Thread interface.
+ *
+ * @retval kThreadErrorNone  Successfully disabled the Thread interface.
+ */
+ThreadError otDisable(void);
+
+/**
+ * This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or
+ * the scan completes.
+ *
+ * @param[in]  aResult  A valid pointer to the beacon information or NULL when the active scan completes.
+ *
+ */
+typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult);
+
+/**
+ * This function starts an IEEE 802.15.4 Active Scan
+ *
+ * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
+ * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
+ * @param[in]  aCallback      A pointer to a function that is called when a beacon is received or the scan completes.
+ *
+ * @retval kThreadError_None  Accepted the Active Scan request.
+ * @retval kThreadError_Busy  Already performing an Active Scan.
+ *
+ */
+ThreadError otActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback);
+
+/**
+ * This function determines if an IEEE 802.15.4 Active Scan is currently in progress.
+ *
+ * @returns true if an active scan is in progress.
+ */
+bool otActiveScanInProgress(void);
 
 /**
  * @}
@@ -288,7 +349,7 @@ ThreadError otSetNetworkName(const char *aNetworkName);
  *
  * @sa otSetPanId
  */
-uint16_t otGetPanId(void);
+otPanId otGetPanId(void);
 
 /**
  * Set the IEEE 802.15.4 PAN ID.
@@ -300,7 +361,34 @@ uint16_t otGetPanId(void);
  *
  * @sa otGetPanId
  */
-ThreadError otSetPanId(uint16_t aPanId);
+ThreadError otSetPanId(otPanId aPanId);
+
+/**
+ * Get the list of IPv6 addresses assigned to the Thread interface.
+ *
+ * @returns A pointer to the first Network Inteface Address.
+ */
+const otNetifAddress *otGetUnicastAddresses(void);
+
+/**
+ * Add a Network Interface Address to the Thread interface.
+ *
+ * @param[in]  aAddress  A pointer to a Network Interface Address.
+ *
+ * @retval kThreadErrorNone  Successfully added the Network Interface Address.
+ * @retval kThreadErrorBusy  The Network Interface Address pointed to by @p aAddress is already added.
+ */
+ThreadError otAddUnicastAddress(otNetifAddress *aAddress);
+
+/**
+ * Remove a Network Interface Address from the Thread interface.
+ *
+ * @param[in]  aAddress  A pointer to a Network Interface Address.
+ *
+ * @retval kThreadErrorNone      Successfully removed the Network Interface Address.
+ * @retval kThreadErrorNotFound  The Network Interface Address point to by @p aAddress was not added.
+ */
+ThreadError otRemoveUnicastAddress(otNetifAddress *aAddress);
 
 /**
  * @}
@@ -564,7 +652,7 @@ void otRemoveMacWhitelist(const uint8_t *aExtAddr);
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
-void otClearMacWhitelist();
+void otClearMacWhitelist(void);
 
 /**
  * Disable MAC whitelist filtering.
@@ -576,7 +664,7 @@ void otClearMacWhitelist();
  * @sa otClearMacWhitelist
  * @sa otEnableMacWhitelist
  */
-void otDisableMacWhitelist();
+void otDisableMacWhitelist(void);
 
 /**
  * Enable MAC whitelist filtering.
@@ -587,7 +675,7 @@ void otDisableMacWhitelist();
  * @sa otClearMacWhitelist
  * @sa otDisableMacWhitelist
  */
-void otEnableMacWhitelist();
+void otEnableMacWhitelist(void);
 
 /**
  * Detach from the Thread network.
@@ -595,7 +683,7 @@ void otEnableMacWhitelist();
  * @retval kThreadErrorNone    Successfully detached from the Thread network.
  * @retval kThreadErrorBusy    Thread is disabled.
  */
-ThreadError otBecomeDetached();
+ThreadError otBecomeDetached(void);
 
 /**
  * Attempt to reattach as a child.
@@ -613,14 +701,14 @@ ThreadError otBecomeChild(otMleAttachFilter aFilter);
  * @retval kThreadErrorNone    Successfully begin attempt to become a router.
  * @retval kThreadErrorBusy    Thread is disabled or already operating in a router or leader role.
  */
-ThreadError otBecomeRouter();
+ThreadError otBecomeRouter(void);
 
 /**
  * Become a leader and start a new partition.
  *
  * @retval kThreadErrorNone  Successfully became a leader and started a new partition.
  */
-ThreadError otBecomeLeader();
+ThreadError otBecomeLeader(void);
 
 /**
  * @}
@@ -651,35 +739,35 @@ ThreadError otBecomeLeader();
  * @retval ::kDeviceRoleRouter    The device is currently operating as a Thread Router.
  * @retval ::kDeviceRoleLeader    The device is currently operating as a Thread Leader.
  */
-otDeviceRole otGetDeviceRole();
+otDeviceRole otGetDeviceRole(void);
 
 /**
  * Get the Leader's Router ID.
  *
  * @returns The Leader's Router ID.
  */
-uint8_t otGetLeaderRouterId();
+uint8_t otGetLeaderRouterId(void);
 
 /**
  * Get the Leader's Weight.
  *
  * @returns The Leader's Weight.
  */
-uint8_t otGetLeaderWeight();
+uint8_t otGetLeaderWeight(void);
 
 /**
  * Get the Network Data Version.
  *
  * @returns The Network Data Version.
  */
-uint8_t otGetNetworkDataVersion();
+uint8_t otGetNetworkDataVersion(void);
 
 /**
  * Get the Partition ID.
  *
  * @returns The Partition ID.
  */
-uint32_t otGetPartitionId();
+uint32_t otGetPartitionId(void);
 
 /**
  * Get the RLOC16.
@@ -693,14 +781,14 @@ uint16_t otGetRloc16(void);
  *
  * @returns The Router ID Sequence.
  */
-uint8_t otGetRouterIdSequence();
+uint8_t otGetRouterIdSequence(void);
 
 /**
  * Get the Stable Network Data Version.
  *
  * @returns The Stable Network Data Version.
  */
-uint8_t otGetStableNetworkDataVersion();
+uint8_t otGetStableNetworkDataVersion(void);
 
 /**
  * @}
@@ -728,47 +816,6 @@ bool otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b);
  * @retval kThreadErrorInvalidArg  Failed to parse the string.
  */
 ThreadError otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
-
-/**
- * Get the list of IPv6 addresses assigned to the Thread interface.
- *
- * @returns A pointer to the first Network Inteface Address.
- */
-const otNetifAddress *otGetUnicastAddresses();
-
-/**
- * Add a Network Interface Address to the Thread interface.
- *
- * @param[in]  aAddress  A pointer to a Network Interface Address.
- *
- * @retval kThreadErrorNone  Successfully added the Network Interface Address.
- * @retval kThreadErrorBusy  The Network Interface Address pointed to by @p aAddress is already added.
- */
-ThreadError otAddUnicastAddress(otNetifAddress *aAddress);
-
-/**
- * Remove a Network Interface Address from the Thread interface.
- *
- * @param[in]  aAddress  A pointer to a Network Interface Address.
- *
- * @retval kThreadErrorNone      Successfully removed the Network Interface Address.
- * @retval kThreadErrorNotFound  The Network Interface Address point to by @p aAddress was not added.
- */
-ThreadError otRemoveUnicastAddress(otNetifAddress *aAddress);
-
-/**
- * Enable the Thread interface.
- *
- * @retval kThreadErrorNone  Successfully enabled the Thread interface.
- */
-ThreadError otEnable(void);
-
-/**
- * Disable the Thread interface.
- *
- * @retval kThreadErrorNone  Successfully disabled the Thread interface.
- */
-ThreadError otDisable(void);
 
 /**
  * @addtogroup messages  Message Buffers
@@ -964,7 +1011,7 @@ int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint1
  *
  * @sa otFreeMessage
  */
-otMessage otNewUdpMessage();
+otMessage otNewUdpMessage(void);
 
 /**
  * Open a UDP/IPv6 socket.

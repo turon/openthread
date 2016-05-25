@@ -1,28 +1,29 @@
 /*
- *    Copyright (c) 2016, Nest Labs, Inc.
- *    All rights reserved.
+ *  Copyright (c) 2016, Nest Labs, Inc.
+ *  All rights reserved.
  *
- *    Redistribution and use in source and binary forms, with or without
- *    modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *    3. Neither the name of the copyright holder nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
  *
- *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- *    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
- *    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- *    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- *    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <ctype.h>
@@ -49,63 +50,64 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     switch (aLogLevel)
     {
     case kLogLevelNone:
-        printf("NONE ");
+        fprintf(stderr, "NONE ");
         break;
 
     case kLogLevelCrit:
-        printf("CRIT ");
+        fprintf(stderr, "CRIT ");
         break;
 
     case kLogLevelWarn:
-        printf("WARN ");
+        fprintf(stderr, "WARN ");
         break;
 
     case kLogLevelInfo:
-        printf("INFO ");
+        fprintf(stderr, "INFO ");
         break;
 
     case kLogLevelDebg:
-        printf("DEBG ");
+        fprintf(stderr, "DEBG ");
         break;
     }
 
     switch (aLogRegion)
     {
     case kLogRegionApi:
-        printf("API  ");
+        fprintf(stderr, "API  ");
         break;
 
     case kLogRegionMle:
-        printf("MLE  ");
+        fprintf(stderr, "MLE  ");
         break;
 
     case kLogRegionArp:
-        printf("ARP  ");
+        fprintf(stderr, "ARP  ");
         break;
 
     case kLogRegionNetData:
-        printf("NETD ");
+        fprintf(stderr, "NETD ");
         break;
 
     case kLogRegionIp6:
-        printf("IPV6 ");
+        fprintf(stderr, "IPV6 ");
         break;
 
     case kLogRegionIcmp:
-        printf("ICMP ");
+        fprintf(stderr, "ICMP ");
         break;
 
     case kLogRegionMac:
-        printf("MAC  ");
+        fprintf(stderr, "MAC  ");
         break;
 
     case kLogRegionMem:
-        printf("MEM  ");
+        fprintf(stderr, "MEM  ");
         break;
     }
 
     va_start(args, aFormat);
-    vprintf(aFormat, args);
+    vfprintf(stderr, aFormat, args);
+    fprintf(stderr, "\r");
     va_end(args);
 }
 

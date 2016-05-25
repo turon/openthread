@@ -25,73 +25,54 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes definitions for computing hashes.
- */
+#include <stdlib.h>
 
-#ifndef HASH_HPP_
-#define HASH_HPP_
+#include <platform/posix/cmdline.h>
 
-#include <stdint.h>
+#include <ncp/ncp.hpp>
+#include <platform/atomic.h>
+#include <platform.h>
 
-#include <openthread-types.h>
+struct gengetopt_args_info args_info;
 
-namespace Thread {
-namespace Crypto {
+Thread::Ncp sNcp;
 
-/**
- * @addtogroup core-security
- *
- * @{
- *
- */
-
-/**
- * This class implements hash computations.
- *
- */
-class Hash
+void otSignalTaskletPending(void)
 {
-public:
-    /**
-     * This method returns the hash size.
-     *
-     * @returns The hash size.
-     *
-     */
-    virtual uint16_t GetSize(void) const = 0;
+}
 
-    /**
-     * This method initializes the hash computation.
-     *
-     */
-    virtual void Init(void) = 0;
+int main(int argc, char *argv[])
+{
+    uint32_t atomic_state;
 
-    /**
-     * This method inputs data into the hash.
-     *
-     * @param[in]  aBuf        A pointer to the input buffer.
-     * @param[in]  aBufLength  The length of @p aBuf in bytes.
-     *
-     */
-    virtual void Input(const void *aBuf, uint16_t aBufLength) = 0;
+    memset(&args_info, 0, sizeof(args_info));
 
-    /**
-     * This method finalizes the hash computation.
-     *
-     * @param[out]  aHash  A pointer to the output buffer.
-     *
-     */
-    virtual void Finalize(uint8_t *aHash) = 0;
-};
+    if (cmdline_parser(argc, argv, &args_info) != 0)
+    {
+        exit(1);
+    }
 
-/**
- * @}
- *
- */
+    hwAlarmInit();
+    hwRadioInit();
+    hwRandomInit();
 
-}  // namespace Crypto
-}  // namespace Thread
+    otInit();
 
-#endif  // HASH_HPP_
+    sNcp.Start();
+
+    while (1)
+    {
+        otProcessNextTasklet();
+
+        atomic_state = otPlatAtomicBegin();
+
+        if (!otAreTaskletsPending())
+        {
+            hwSleep();
+        }
+
+        otPlatAtomicEnd(atomic_state);
+    }
+
+    return 0;
+}
