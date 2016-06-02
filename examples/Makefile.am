@@ -34,6 +34,7 @@ DIST_SUBDIRS                            = \
     platform                              \
     cli                                   \
     ncp                                   \
+    phy                                   \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
@@ -42,6 +43,7 @@ SUBDIRS                                 = \
     platform                              \
     cli                                   \
     ncp                                   \
+    phy                                   \
     $(NULL)
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.

@@ -438,6 +438,7 @@ examples/platform/Makefile
 examples/platform/posix/Makefile
 examples/cli/Makefile
 examples/ncp/Makefile
+examples/phy/Makefile
 tests/Makefile
 tests/scripts/Makefile
 tests/unit/Makefile

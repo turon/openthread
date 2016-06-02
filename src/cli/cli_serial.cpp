@@ -53,7 +53,7 @@ static Serial *sServer;
 Tasklet Serial::sReceiveTask(&ReceiveTask, NULL);
 Tasklet Serial::sSendDoneTask(&SendDoneTask, NULL);
 
-Serial::Serial(void)
+Serial::Serial(InterpreterBase &aInterpreter) : mInterpreter(aInterpreter)
 {
     sServer = this;
 }
@@ -65,6 +65,7 @@ ThreadError Serial::Start(void)
     mTxLength = 0;
     mSendLength = 0;
     otPlatSerialEnable();
+    mInterpreter.Start();
     return kThreadError_None;
 }
 
@@ -138,7 +139,7 @@ ThreadError Serial::ProcessCommand(void)
         mRxBuffer[--mRxLength] = '\0';
     }
 
-    Interpreter::ProcessLine(mRxBuffer, mRxLength, *this);
+    mInterpreter.ProcessLine(mRxBuffer, mRxLength, *this);
 
     mRxLength = 0;
 

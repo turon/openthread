@@ -80,8 +80,11 @@ otNetifAddress Interpreter::sAddress;
 
 Ip6::IcmpEcho Interpreter::sIcmpEcho(&HandleEchoResponse, NULL);
 Ip6::SockAddr Interpreter::sSockAddr;
-Server *Interpreter::sServer;
 uint8_t Interpreter::sEchoRequest[1500];
+
+Interpreter::Interpreter() : InterpreterBase(sCommands, sizeof(sCommands))
+{
+}
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
 {
@@ -1033,37 +1036,6 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
-{
-    char *argv[kMaxArgs];
-    char *cmd;
-    int argc;
-    char *last;
-
-    sServer = &aServer;
-
-    VerifyOrExit((cmd = strtok_r(aBuf, " ", &last)) != NULL, ;);
-
-    for (argc = 0; argc < kMaxArgs; argc++)
-    {
-        if ((argv[argc] = strtok_r(NULL, " ", &last)) == NULL)
-        {
-            break;
-        }
-    }
-
-    for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
-    {
-        if (strcmp(cmd, sCommands[i].mName) == 0)
-        {
-            sCommands[i].mCommand(argc, argv);
-            break;
-        }
-    }
-
-exit:
-    return;
-}
 
 }  // namespace Cli
 }  // namespace Thread

@@ -31,14 +31,19 @@
  *   This file contains definitions for the CLI interpreter.
  */
 
-#ifndef CLI_HPP_
-#define CLI_HPP_
+#ifndef CLI_PHY_HPP_
+#define CLI_PHY_HPP_
 
 #include <stdarg.h>
 
 #include <cli/cli_base.hpp>
 #include <cli/cli_server.hpp>
-#include <net/icmp6.hpp>
+#include <common/timer.hpp>
+#include <mac/mac.hpp>
+
+#include <platform/radio.h>
+
+using Thread::Timer;
 
 namespace Thread {
 
@@ -50,6 +55,67 @@ namespace Thread {
  *
  */
 namespace Cli {
+namespace Phy {
+
+class PhyController 
+{
+public:
+    enum PhyState
+    {
+        kStateDisabled = 0,
+	kStateSleep = 1,
+	kStateIdle = 2,
+	kStateListen = 3,
+	kStateReceive = 4,
+	kStateTransmit = 5,
+	kStateAckWait = 6,
+    };
+
+    PhyController();
+
+    friend class Interpreter; 
+
+    static void OnRxDone(void *aContext);
+    static void OnTxDone(void *aContext);
+    static void OnTimerFired(void *aContext);
+
+private:
+    void OnRxDone();
+    void OnTxDone();
+    void OnTimerFired();
+
+    void NextOperation();
+    ThreadError Receive();
+    ThreadError Transmit();
+
+    Timer mTimer;
+
+    PhyState mState;
+
+    uint8_t mChannel;
+    uint16_t mPanId;
+    uint8_t mSequence;
+
+    uint8_t mLength;
+    uint32_t mCount;
+    uint32_t mPeriod;
+
+    uint32_t mFemMode;
+    uint32_t mFemBias;
+    uint32_t mPowerCal;
+
+    bool mReceive;
+    uint32_t mNumReceived;
+    uint32_t mNumSend;
+    uint32_t mNumSent;
+    uint32_t mReceiveStart;
+    uint32_t mSendStart;
+
+    bool mSleep;
+
+    Mac::Frame mFrameTx;
+    Mac::Frame mFrameRx;
+};
 
 /**
  * This class implements the CLI interpreter.
@@ -61,55 +127,43 @@ public:
     Interpreter();
 
 private:
+    enum
+    {
+        kMaxArgs = 8,
+    };
 
-    static void AppendResult(ThreadError error);
-
+    void Start(void);
+  
     static void ProcessHelp(int argc, char *argv[]);
     static void ProcessChannel(int argc, char *argv[]);
-    static void ProcessChildTimeout(int argc, char *argv[]);
-    static void ProcessContextIdReuseDelay(int argc, char *argv[]);
-    static void ProcessExtAddress(int argc, char *argv[]);
-    static void ProcessExtPanId(int argc, char *argv[]);
-    static void ProcessIpAddr(int argc, char *argv[]);
-    static ThreadError ProcessIpAddrAdd(int argc, char *argv[]);
-    static ThreadError ProcessIpAddrDel(int argc, char *argv[]);
-    static void ProcessKeySequence(int argc, char *argv[]);
-    static void ProcessLeaderWeight(int argc, char *argv[]);
-    static void ProcessMasterKey(int argc, char *argv[]);
-    static void ProcessMode(int argc, char *argv[]);
-    static void ProcessNetworkDataRegister(int argc, char *argv[]);
-    static void ProcessNetworkIdTimeout(int argc, char *argv[]);
-    static void ProcessNetworkName(int argc, char *argv[]);
     static void ProcessPanId(int argc, char *argv[]);
-    static void ProcessPing(int argc, char *argv[]);
-    static void ProcessPrefix(int argc, char *argv[]);
-    static ThreadError ProcessPrefixAdd(int argc, char *argv[]);
-    static ThreadError ProcessPrefixRemove(int argc, char *argv[]);
-    static void ProcessReleaseRouterId(int argc, char *argv[]);
-    static void ProcessRoute(int argc, char *argv[]);
-    static ThreadError ProcessRouteAdd(int argc, char *argv[]);
-    static ThreadError ProcessRouteRemove(int argc, char *argv[]);
-    static void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
-    static void ProcessRloc16(int argc, char *argv[]);
-    static void ProcessScan(int argc, char *argv[]);
-    static void ProcessStart(int argc, char *argv[]);
-    static void ProcessState(int argc, char *argv[]);
-    static void ProcessStop(int argc, char *argv[]);
-    static void ProcessWhitelist(int argc, char *argv[]);
 
-    static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleActiveScanResult(otActiveScanResult *aResult);
+    static void ProcessCount(int argc, char *argv[]);
+    static void ProcessLength(int argc, char *argv[]);
+    static void ProcessPeriod(int argc, char *argv[]);
+
+    static void ProcessState(int argc, char *argv[]);
+    static void ProcessStateSleep(int argc, char *argv[]);
+    static void ProcessStateIdle(int argc, char *argv[]);
+    static void ProcessStateRx(int argc, char *argv[]);
+    static void ProcessStateTx(int argc, char *argv[]);
+    static void ProcessStateRxStop(int argc, char *argv[]);
+    static void ProcessStateTxStop(int argc, char *argv[]);
+
+    static void ProcessPowerCal(int argc, char *argv[]);
+    static void ProcessFemBias(int argc, char *argv[]);
+    static void ProcessFemMode(int argc, char *argv[]);
+    static void ProcessGpio(int argc, char *argv[]);
+    static void ProcessReset(int argc, char *argv[]);
+    static void ProcessVersion(int argc, char *argv[]);
+
     static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength);
     static ThreadError ParseLong(char *argv, long &value);
 
     static const struct Command sCommands[];
-    static otNetifAddress sAddress;
-
-    static Ip6::SockAddr sSockAddr;
-    static Ip6::IcmpEcho sIcmpEcho;
-    static uint8_t sEchoRequest[];
 };
 
+}  // namespace Phy
 }  // namespace Cli
 }  // namespace Thread
 

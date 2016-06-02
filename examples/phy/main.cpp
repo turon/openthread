@@ -31,14 +31,14 @@
 #include <platform/posix/cmdline.h>
 
 #include <openthread.h>
-#include <cli/cli.hpp>
+#include "cli_phy.hpp"
 #include <cli/cli_serial.hpp>
 #include <platform/atomic.h>
 #include <platform.h>
 
 struct gengetopt_args_info args_info;
 
-Thread::Cli::Interpreter sCliInterpreter;
+Thread::Cli::Phy::Interpreter sCliInterpreter;
 Thread::Cli::Serial sCliServer(sCliInterpreter);
 
 void otSignalTaskletPending(void)

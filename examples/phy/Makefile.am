@@ -28,31 +28,32 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                       = libopenthread-cli.a
+bin_PROGRAMS = phy
 
-libopenthread_cli_a_CPPFLAGS =        \
-    -I$(top_srcdir)/include           \
-    -I$(top_srcdir)/src               \
-    -I$(top_srcdir)/src/core          \
-    $(OPENTHREAD_TARGET_DEFINES)      \
+phy_CPPFLAGS                                                   = \
+    -I$(top_srcdir)/include                                      \
+    -I$(top_srcdir)/src                                          \
+    -I$(top_srcdir)/src/core                                     \
+    -I$(top_srcdir)/examples                                     \
+    -I$(top_srcdir)/examples/platform/posix                      \
+    $(OPENTHREAD_TARGET_DEFINES)                                 \
     $(NULL)
 
-libopenthread_cli_a_SOURCES         = \
-    cli.cpp                           \
-    cli_base.cpp                      \
-    cli_serial.cpp                    \
-    cli_udp.cpp                       \
+phy_LDADD                                                      =  \
+    $(top_builddir)/src/core/libopenthread.a                      \
+    $(top_builddir)/src/cli/libopenthread-cli.a                   \
+    $(top_builddir)/examples/platform/posix/libopenthread-posix.a \
+    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a           \
+    -lpthread                                                     \
     $(NULL)
 
-noinst_HEADERS                      = \
-    cli.hpp                           \
-    cli_serial.hpp                    \
-    cli_server.hpp                    \
-    cli_udp.hpp                       \
+phy_SOURCES                                                    = \
+    main.cpp                                                     \
+    cli_phy.cpp                                                  \
     $(NULL)
 
-if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                          = $(wildcard *.gcda *.gcno)
-endif # OPENTHREAD_BUILD_COVERAGE
+phy_INCLUDES                                                   = \
+    .	                                                         \
+    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

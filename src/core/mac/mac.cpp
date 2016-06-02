@@ -481,7 +481,7 @@ exit:
     }
 }
 
-extern "C" void otPlatRadioSignalTransmitDone(void)
+extern "C" __WEAK void otPlatRadioSignalTransmitDone(void)
 {
     sTransmitDoneTask.Post();
 }
@@ -752,7 +752,7 @@ exit:
     return error;
 }
 
-extern "C" void otPlatRadioSignalReceiveDone(void)
+extern "C" __WEAK void otPlatRadioSignalReceiveDone(void)
 {
     sReceiveDoneTask.Post();
 }

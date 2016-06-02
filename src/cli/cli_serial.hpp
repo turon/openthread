@@ -35,6 +35,7 @@
 #define CLI_SERIAL_HPP_
 
 #include <openthread-types.h>
+#include <cli/cli_base.hpp>
 #include <cli/cli_server.hpp>
 #include <common/tasklet.hpp>
 
@@ -48,7 +49,7 @@ namespace Cli {
 class Serial: public Server
 {
 public:
-    Serial(void);
+    Serial(InterpreterBase &aInterpreter);
 
     /**
      * This method starts the CLI server.
@@ -98,6 +99,8 @@ private:
     void ReceiveTask(void);
     void SendDoneTask(void);
     void Send(void);
+
+    InterpreterBase &mInterpreter;
 
     char mRxBuffer[kRxBufferSize];
     uint16_t mRxLength;

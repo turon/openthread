@@ -47,6 +47,8 @@ namespace Cli {
 class Udp: public Server
 {
 public:
+    Udp(InterpreterBase &aInterpreter);
+
     /**
      * This method starts the CLI server.
      *
@@ -85,6 +87,8 @@ private:
 
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(otMessage aMessage, const otMessageInfo *aMessageInfo);
+
+    InterpreterBase &mInterpreter;
 
     otUdpSocket mSocket;
     otMessageInfo mPeer;

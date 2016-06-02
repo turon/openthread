@@ -39,6 +39,7 @@
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
 #include <mac/mac_whitelist.hpp>
+#include <platform/toolchain.h>
 #include <platform/radio.h>
 #include <thread/key_manager.hpp>
 #include <thread/topology.hpp>
@@ -424,8 +425,8 @@ private:
 
     Beacon mBeacon;
 
-    Frame mSendFrame;
-    Frame mReceiveFrame;
+    Frame mSendFrame __ALIGNED;
+    Frame mReceiveFrame __ALIGNED;
     Sender *mSendHead, *mSendTail;
     Receiver *mReceiveHead, *mReceiveTail;
 

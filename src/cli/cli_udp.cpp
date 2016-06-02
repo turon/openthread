@@ -42,6 +42,10 @@
 namespace Thread {
 namespace Cli {
 
+Udp::Udp(InterpreterBase &aInterpreter) : mInterpreter(aInterpreter) 
+{
+}
+
 ThreadError Udp::Start(void)
 {
     ThreadError error;
@@ -82,7 +86,7 @@ void Udp::HandleUdpReceive(otMessage aMessage, const otMessageInfo *aMessageInfo
 
     mPeer = *aMessageInfo;
 
-    Interpreter::ProcessLine(buf, payloadLength, *this);
+    mInterpreter.ProcessLine(buf, payloadLength, *this);
 
 exit:
     {}
