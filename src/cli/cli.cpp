@@ -70,14 +70,11 @@ const struct Command Interpreter::sCommands[] =
     { "route", &ProcessRoute },
     { "routerupgradethreshold", &ProcessRouterUpgradeThreshold },
     { "scan", &ProcessScan },
-    { "shutdown", &ProcessShutdown },
     { "start", &ProcessStart },
     { "state", &ProcessState },
     { "stop", &ProcessStop },
     { "whitelist", &ProcessWhitelist },
 };
-
-ResponseBuffer Interpreter::sResponse;
 
 otNetifAddress Interpreter::sAddress;
 
@@ -140,11 +137,11 @@ void Interpreter::AppendResult(ThreadError error)
 {
     if (error == kThreadError_None)
     {
-        sResponse.Append("Done\r\n");
+        sServer->OutputFormat("Done\r\n");
     }
     else
     {
-        sResponse.Append("Error %d\r\n", error);
+        sServer->OutputFormat("Error %d\r\n", error);
     }
 }
 
@@ -159,7 +156,7 @@ void Interpreter::ProcessHelp(int argc, char *argv[])
 {
     for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {
-        sResponse.Append("%s\r\n", sCommands[i].mName);
+        sServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
 }
 
@@ -170,7 +167,7 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sResponse.Append("%d\r\n", otGetChannel());
+        sServer->OutputFormat("%d\r\n", otGetChannel());
     }
     else
     {
@@ -189,7 +186,7 @@ void Interpreter::ProcessChildTimeout(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sResponse.Append("%d\r\n", otGetChildTimeout());
+        sServer->OutputFormat("%d\r\n", otGetChildTimeout());
     }
     else
     {
@@ -208,7 +205,7 @@ void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sResponse.Append("%d\r\n", otGetContextIdReuseDelay());
+        sServer->OutputFormat("%d\r\n", otGetContextIdReuseDelay());
     }
     else
     {
@@ -223,9 +220,9 @@ exit:
 void Interpreter::ProcessExtAddress(int argc, char *argv[])
 {
     const uint8_t *extAddress = otGetExtendedAddress();
-    sResponse.Append("%02x%02x%02x%02x%02x%02x%02x%02x\r\n",
-                     extAddress[0], extAddress[1], extAddress[2], extAddress[3],
-                     extAddress[4], extAddress[5], extAddress[6], extAddress[7]);
+    sServer->OutputFormat("%02x%02x%02x%02x%02x%02x%02x%02x\r\n",
+                          extAddress[0], extAddress[1], extAddress[2], extAddress[3],
+                          extAddress[4], extAddress[5], extAddress[6], extAddress[7]);
     AppendResult(kThreadError_None);
 }
 
@@ -236,9 +233,9 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
     if (argc == 0)
     {
         const uint8_t *extPanId = otGetExtendedPanId();
-        sResponse.Append("%02x%02x%02x%02x%02x%02x%02x%02x\r\n",
-                         extPanId[0], extPanId[1], extPanId[2], extPanId[3],
-                         extPanId[4], extPanId[5], extPanId[6], extPanId[7]);
+        sServer->OutputFormat("%02x%02x%02x%02x%02x%02x%02x%02x\r\n",
+                              extPanId[0], extPanId[1], extPanId[2], extPanId[3],
+                              extPanId[4], extPanId[5], extPanId[6], extPanId[7]);
     }
     else
     {
@@ -292,11 +289,11 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
     {
         for (const otNetifAddress *addr = otGetUnicastAddresses(); addr; addr = addr->mNext)
         {
-            sResponse.Append("%x:%x:%x:%x:%x:%x:%x:%x\r\n",
-                             HostSwap16(addr->mAddress.m16[0]), HostSwap16(addr->mAddress.m16[1]),
-                             HostSwap16(addr->mAddress.m16[2]), HostSwap16(addr->mAddress.m16[3]),
-                             HostSwap16(addr->mAddress.m16[4]), HostSwap16(addr->mAddress.m16[5]),
-                             HostSwap16(addr->mAddress.m16[6]), HostSwap16(addr->mAddress.m16[7]));
+            sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x\r\n",
+                                  HostSwap16(addr->mAddress.m16[0]), HostSwap16(addr->mAddress.m16[1]),
+                                  HostSwap16(addr->mAddress.m16[2]), HostSwap16(addr->mAddress.m16[3]),
+                                  HostSwap16(addr->mAddress.m16[4]), HostSwap16(addr->mAddress.m16[5]),
+                                  HostSwap16(addr->mAddress.m16[6]), HostSwap16(addr->mAddress.m16[7]));
         }
     }
     else
@@ -322,7 +319,7 @@ void Interpreter::ProcessKeySequence(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sResponse.Append("%d\r\n", otGetKeySequenceCounter());
+        sServer->OutputFormat("%d\r\n", otGetKeySequenceCounter());
     }
     else
     {
@@ -341,7 +338,7 @@ void Interpreter::ProcessLeaderWeight(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sResponse.Append("%d\r\n", otGetLocalLeaderWeight());
+        sServer->OutputFormat("%d\r\n", otGetLocalLeaderWeight());
     }
     else
     {
@@ -364,10 +361,10 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
 
         for (int i = 0; i < keyLength; i++)
         {
-            sResponse.Append("%02x", key[i]);
+            sServer->OutputFormat("%02x", key[i]);
         }
 
-        sResponse.Append("\r\n");
+        sServer->OutputFormat("\r\n");
     }
     else
     {
@@ -392,25 +389,25 @@ void Interpreter::ProcessMode(int argc, char *argv[])
 
         if (linkMode.mRxOnWhenIdle)
         {
-            sResponse.Append("r");
+            sServer->OutputFormat("r");
         }
 
         if (linkMode.mSecureDataRequests)
         {
-            sResponse.Append("s");
+            sServer->OutputFormat("s");
         }
 
         if (linkMode.mDeviceType)
         {
-            sResponse.Append("d");
+            sServer->OutputFormat("d");
         }
 
         if (linkMode.mNetworkData)
         {
-            sResponse.Append("n");
+            sServer->OutputFormat("n");
         }
 
-        sResponse.Append("\r\n");
+        sServer->OutputFormat("\r\n");
     }
     else
     {
@@ -462,7 +459,7 @@ void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sResponse.Append("%d\r\n", otGetNetworkIdTimeout());
+        sServer->OutputFormat("%d\r\n", otGetNetworkIdTimeout());
     }
     else
     {
@@ -480,7 +477,7 @@ void Interpreter::ProcessNetworkName(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sResponse.Append("%.*s\r\n", OT_NETWORK_NAME_SIZE, otGetNetworkName());
+        sServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_SIZE, otGetNetworkName());
     }
     else
     {
@@ -498,7 +495,7 @@ void Interpreter::ProcessPanId(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sResponse.Append("%d\r\n", otGetPanId());
+        sServer->OutputFormat("%d\r\n", otGetPanId());
     }
     else
     {
@@ -516,16 +513,13 @@ void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip
 
     aMessage.Read(aMessage.GetOffset(), sizeof(icmp6Header), &icmp6Header);
 
-    sResponse.Init();
-    sResponse.Append("%d bytes from ", aMessage.GetLength() - aMessage.GetOffset());
-    sResponse.Append("%x:%x:%x:%x:%x:%x:%x:%x",
-                     HostSwap16(aMessageInfo.GetPeerAddr().m16[0]), HostSwap16(aMessageInfo.GetPeerAddr().m16[1]),
-                     HostSwap16(aMessageInfo.GetPeerAddr().m16[2]), HostSwap16(aMessageInfo.GetPeerAddr().m16[3]),
-                     HostSwap16(aMessageInfo.GetPeerAddr().m16[4]), HostSwap16(aMessageInfo.GetPeerAddr().m16[5]),
-                     HostSwap16(aMessageInfo.GetPeerAddr().m16[6]), HostSwap16(aMessageInfo.GetPeerAddr().m16[7]));
-    sResponse.Append(": icmp_seq=%d hlim=%d\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit);
-
-    sServer->Output(sResponse.GetResponse(), sResponse.GetResponseLength());
+    sServer->OutputFormat("%d bytes from ", aMessage.GetLength() - aMessage.GetOffset());
+    sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x",
+                          HostSwap16(aMessageInfo.GetPeerAddr().m16[0]), HostSwap16(aMessageInfo.GetPeerAddr().m16[1]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().m16[2]), HostSwap16(aMessageInfo.GetPeerAddr().m16[3]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().m16[4]), HostSwap16(aMessageInfo.GetPeerAddr().m16[5]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().m16[6]), HostSwap16(aMessageInfo.GetPeerAddr().m16[7]));
+    sServer->OutputFormat(": icmp_seq=%d hlim=%d\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit);
 }
 
 void Interpreter::ProcessPing(int argc, char *argv[])
@@ -545,8 +539,6 @@ void Interpreter::ProcessPing(int argc, char *argv[])
     }
 
     sIcmpEcho.SendEchoRequest(sSockAddr, sEchoRequest, length);
-
-    sResponse.Init();
 
     return;
 
@@ -711,8 +703,8 @@ exit:
 
 void Interpreter::ProcessRloc16(int argc, char *argv[])
 {
-    sResponse.Append("%04x\r\n", otGetRloc16());
-    sResponse.Append("Done\r\n");
+    sServer->OutputFormat("%04x\r\n", otGetRloc16());
+    sServer->OutputFormat("Done\r\n");
 }
 
 ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
@@ -835,7 +827,7 @@ void Interpreter::ProcessRouterUpgradeThreshold(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sResponse.Append("%d\r\n", otGetRouterUpgradeThreshold());
+        sServer->OutputFormat("%d\r\n", otGetRouterUpgradeThreshold());
     }
     else
     {
@@ -860,8 +852,8 @@ void Interpreter::ProcessScan(int argc, char *argv[])
     }
 
     SuccessOrExit(error = otActiveScan(scanChannels, 0, &HandleActiveScanResult));
-    sResponse.Append("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm |\r\n");
-    sResponse.Append("+---+------------------+------------------+------+------------------+----+-----+\r\n");
+    sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
+    sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
     return;
 
@@ -873,54 +865,45 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
 {
     const uint8_t *bytes;
 
-    sResponse.Init();
-
     if (aResult == NULL)
     {
-        sResponse.Append("Done\r\n");
+        sServer->OutputFormat("Done\r\n");
         ExitNow();
     }
 
-    sResponse.Append("| %d ", aResult->mIsJoinable);
+    sServer->OutputFormat("| %d ", aResult->mIsJoinable);
 
     if (aResult->mNetworkName != NULL)
     {
-        sResponse.Append("| %-16s ", aResult->mNetworkName);
+        sServer->OutputFormat("| %-16s ", aResult->mNetworkName);
     }
     else
     {
-        sResponse.Append("| ---------------- ");
+        sServer->OutputFormat("| ---------------- ");
     }
 
     if (aResult->mExtPanId != NULL)
     {
         bytes = aResult->mExtPanId;
-        sResponse.Append("| %02x%02x%02x%02x%02x%02x%02x%02x ",
-                         bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]);
+        sServer->OutputFormat("| %02x%02x%02x%02x%02x%02x%02x%02x ",
+                              bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]);
     }
     else
     {
-        sResponse.Append("| ---------------- ");
+        sServer->OutputFormat("| ---------------- ");
     }
 
-    sResponse.Append("| %04x ", aResult->mPanId);
+    sServer->OutputFormat("| %04x ", aResult->mPanId);
 
     bytes = aResult->mExtAddress.m8;
-    sResponse.Append("| %02x%02x%02x%02x%02x%02x%02x%02x ",
-                     bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]);
-    sResponse.Append("| %02d ", aResult->mChannel);
-    sResponse.Append("| %03d |\r\n", aResult->mRssi);
+    sServer->OutputFormat("| %02x%02x%02x%02x%02x%02x%02x%02x ",
+                          bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]);
+    sServer->OutputFormat("| %2d ", aResult->mChannel);
+    sServer->OutputFormat("| %3d ", aResult->mRssi);
+    sServer->OutputFormat("| %3d |\r\n", aResult->mLqi);
 
 exit:
-    sServer->Output(sResponse.GetResponse(), sResponse.GetResponseLength());
-}
-
-void Interpreter::ProcessShutdown(int argc, char *argv[])
-{
-    AppendResult(kThreadError_None);
-    sServer->Output(sResponse.GetResponse(), sResponse.GetResponseLength());
-    otPlatSerialDisable();
-    exit(0);
+    return;
 }
 
 void Interpreter::ProcessStart(int argc, char *argv[])
@@ -942,23 +925,23 @@ void Interpreter::ProcessState(int argc, char *argv[])
         switch (otGetDeviceRole())
         {
         case kDeviceRoleDisabled:
-            sResponse.Append("disabled\r\n");
+            sServer->OutputFormat("disabled\r\n");
             break;
 
         case kDeviceRoleDetached:
-            sResponse.Append("detached\r\n");
+            sServer->OutputFormat("detached\r\n");
             break;
 
         case kDeviceRoleChild:
-            sResponse.Append("child\r\n");
+            sServer->OutputFormat("child\r\n");
             break;
 
         case kDeviceRoleRouter:
-            sResponse.Append("router\r\n");
+            sServer->OutputFormat("router\r\n");
             break;
 
         case kDeviceRoleLeader:
-            sResponse.Append("leader\r\n");
+            sServer->OutputFormat("leader\r\n");
             break;
         }
     }
@@ -1069,8 +1052,6 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
         }
     }
 
-    sResponse.Init();
-
     for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {
         if (strcmp(cmd, sCommands[i].mName) == 0)
@@ -1078,11 +1059,6 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
             sCommands[i].mCommand(argc, argv);
             break;
         }
-    }
-
-    if (sResponse.GetResponseLength() > 0)
-    {
-        aServer.Output(sResponse.GetResponse(), sResponse.GetResponseLength());
     }
 
 exit:
