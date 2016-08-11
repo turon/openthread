@@ -41,6 +41,8 @@ class Node:
 
         if self.node_type == 'soc':
             self.__init_soc(nodeid)
+        elif self.node_type == 'ncp-sim':
+            self.__init_ncp_sim(nodeid)
         else:
             self.__init_sim(nodeid)
 
@@ -67,6 +69,19 @@ class Node:
 
         # Add delay to ensure that the process is ready to receive commands.
         time.sleep(0.1)
+
+
+    def __init_ncp_sim(self, nodeid):
+        """ Initialize an NCP simulation node. """
+        if "top_builddir" in os.environ.keys():
+            srcdir = os.environ['top_builddir']
+            cmd = '%s/tools/spinel-cli/spinel-cli.py -p %s/examples/apps/ncp/ot-ncp -n' % (srcdir, srcdir)
+        else:
+            cmd = './ot-ncp'
+        cmd += ' %d' % nodeid
+        print ("%s" % cmd)
+
+        self.pexpect = pexpect.spawn(cmd, timeout=2)
 
     def __init_soc(self, nodeid):
         """ Initialize a System-on-a-chip node connected via UART. """
