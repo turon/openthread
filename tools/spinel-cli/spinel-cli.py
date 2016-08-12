@@ -218,8 +218,8 @@ SPINEL_PROP_MAC_EXT__END           = 0x1400
     
 SPINEL_PROP_NET__BEGIN           = 0x40
 SPINEL_PROP_NET_SAVED            = SPINEL_PROP_NET__BEGIN + 0 #< [b]
-SPINEL_PROP_NET_ENABLED          = SPINEL_PROP_NET__BEGIN + 1 #< [b]
-SPINEL_PROP_NET_STATE            = SPINEL_PROP_NET__BEGIN + 2 #< [C]
+SPINEL_PROP_NET_IF_UP            = SPINEL_PROP_NET__BEGIN + 1 #< [b]
+SPINEL_PROP_NET_STACK_UP         = SPINEL_PROP_NET__BEGIN + 2 #< [C]
 SPINEL_PROP_NET_ROLE             = SPINEL_PROP_NET__BEGIN + 3 #< [C]
 SPINEL_PROP_NET_NETWORK_NAME     = SPINEL_PROP_NET__BEGIN + 4 #< [U]
 SPINEL_PROP_NET_XPANID           = SPINEL_PROP_NET__BEGIN + 5 #< [D]
@@ -741,8 +741,8 @@ class SpinelPropertyHandler(SpinelCodec):
     def MAC_WHITELIST_ENABLED(self, payload): return self.parse_b(payload)
 
     def NET_SAVED(self, payload):             return self.parse_b(payload)
-    def NET_ENABLED(self, payload):           return self.parse_b(payload)
-    def NET_STATE(self, payload):             return self.parse_C(payload)
+    def NET_IF_UP(self, payload):             return self.parse_b(payload)
+    def NET_STACK_UP(self, payload):          return self.parse_C(payload)
     def NET_ROLE(self, payload):              return self.parse_C(payload)
     def NET_NETWORK_NAME(self, payload):      return self.parse_U(payload)
     def NET_XPANID(self, payload):            return self.parse_D(payload)
@@ -875,8 +875,8 @@ SPINEL_PROP_DISPATCH = {
     SPINEL_PROP_MAC_WHITELIST_ENABLED: wpanPropHandler.MAC_WHITELIST_ENABLED,
 
     SPINEL_PROP_NET_SAVED:             wpanPropHandler.NET_SAVED,
-    SPINEL_PROP_NET_ENABLED:           wpanPropHandler.NET_ENABLED,
-    SPINEL_PROP_NET_STATE:             wpanPropHandler.NET_STATE,
+    SPINEL_PROP_NET_IF_UP:             wpanPropHandler.NET_IF_UP,
+    SPINEL_PROP_NET_STACK_UP:          wpanPropHandler.NET_STACK_UP,
     SPINEL_PROP_NET_ROLE:              wpanPropHandler.NET_ROLE,
     SPINEL_PROP_NET_NETWORK_NAME:      wpanPropHandler.NET_NETWORK_NAME,
     SPINEL_PROP_NET_XPANID:            wpanPropHandler.NET_XPANID,
@@ -1156,7 +1156,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         'diag-stop', 
 
         # OpenThread Spinel-specific commands
-        'enabled', 
 
     ]
 
@@ -1670,8 +1669,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         IFCONFIG_MAP_VALUE = {
             0: "down",
             1: "up",
-            2: "up",
-            3: "up",
         }
 
         IFCONFIG_MAP_NAME = {
@@ -1687,7 +1684,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
                 print("Error")
                 return
 
-        result = self.prop_get_or_set_value(SPINEL_PROP_NET_STATE, line)
+        result = self.prop_get_or_set_value(SPINEL_PROP_NET_IF_UP, line)
         if result != None:
             if not line:
                 print IFCONFIG_MAP_VALUE[result]
@@ -2100,10 +2097,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         self.handle_property("", SPINEL_PROP_MAC_SCAN_BEACON, 'U')
         
 
-    def do_enabled(self, line): 
-        """ Specifies whether Thread Network interface is enabled. """
-        self.handle_property(line, SPINEL_PROP_NET_ENABLED)
-
     def do_thread(self, line):
         """
         thread start
@@ -2140,7 +2133,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
                 print("Error")
                 return
 
-        result = self.prop_get_or_set_value(SPINEL_PROP_NET_STATE, line)
+        result = self.prop_get_or_set_value(SPINEL_PROP_NET_STACK_UP, line)
         if result != None:
             if not line:
                 print ARG_MAP_VALUE[result]
