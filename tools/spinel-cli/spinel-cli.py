@@ -2417,6 +2417,12 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         pass
 
 
+
+import atexit
+@atexit.register
+def goodbye():
+    print "Warning: some lingering processes may exist.  Goodbye."
+
 if __name__ == "__main__":
 
     args = sys.argv[1:] 
