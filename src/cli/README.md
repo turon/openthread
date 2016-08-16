@@ -775,12 +775,15 @@ c467a90a2060fa0e
 Done
 ```
 
-### whitelist add \<extaddr\>
+### whitelist add \<extaddr\> [rssi]
 
 Add an IEEE 802.15.4 Extended Address to the whitelist.
 
+* extaddr: The extended address of the node to whitelist communication to.
+* rssi: Optional rssi parameter to set link quality to whitelisted node.
+
 ```bash
-> whitelist add dead00beef00cafe
+> whitelist add dead00beef00cafe -20
 Done
 ```
 

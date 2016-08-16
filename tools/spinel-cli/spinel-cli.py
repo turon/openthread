@@ -2201,7 +2201,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             c467a90a2060fa0e
             Done
 
-        whitelist add <extaddr>
+        whitelist add <extaddr> [rssi]
         
             Add an IEEE 802.15.4 Extended Address to the whitelist.
         
@@ -2258,12 +2258,15 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             return
 
         elif args[0] == "clear":
-            value = self.prop_insert_value(SPINEL_PROP_MAC_WHITELIST, None, 
-                                           None)
+            value = self.prop_set_value(SPINEL_PROP_MAC_WHITELIST, None, None)
 
         elif args[0] == "add":
             arr = hex_to_bytes(args[1])            
-            arr += pack('b', SPINEL_RSSI_OVERRIDE)
+            try:
+                rssi = int(args[2])
+            except:
+                rssi = SPINEL_RSSI_OVERRIDE
+            arr += pack('b', rssi)
             value = self.prop_insert_value(SPINEL_PROP_MAC_WHITELIST, arr, 
                                            str(len(arr))+'s')
 
