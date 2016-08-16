@@ -1761,7 +1761,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             > leaderweight 128
             Done
         """
-        self.handle_property(line, SPINEL_PROP_THREAD_LEADER_WEIGHT)
+        self.handle_property(line, SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT)
 
     def do_masterkey(self, line): 
         """
