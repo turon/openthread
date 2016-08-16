@@ -1739,7 +1739,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             > keysequence 10
             Done
         """
-        self.handle_property(line, SPINEL_PROP_NET_KEY_SEQUENCE)
+        self.handle_property(line, SPINEL_PROP_NET_KEY_SEQUENCE, 'L')
 
     def do_leaderdata(self, line): 
         pass 
