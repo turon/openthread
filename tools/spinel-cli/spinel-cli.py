@@ -1246,7 +1246,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
     def prop_get_or_set_value(self, prop_id, line, format='B'):
         """ Helper to get or set a property value based on line arguments. """
         if line:
-            value = self.prop_set_value(prop_id, int(line), format)
+            value = self.prop_set_value(prop_id, self.prep_line(line), format)
         else:    
             value = self.prop_get_value(prop_id)
         return value
@@ -1292,7 +1292,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             print "Error"
             return None
 
-        if not line:
+        if line != None:
             # Only print value on PROP_VALUE_GET
             if (format == 'D') or (format == 'E'):
                 print hexify_str(value,'')
@@ -1672,8 +1672,8 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         }
 
         IFCONFIG_MAP_NAME = {
-            "down": 0,
-            "up": 1,
+            "down": "0",
+            "up": "1",
         }
 
         if line:
