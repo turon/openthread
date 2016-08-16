@@ -1302,7 +1302,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         print "Done"
         return value
 
-
     def do_help(self, line):
         if (line):
             cmd, arg, unused = self.parseline(line)
@@ -1967,6 +1966,19 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             > prefix remove 2001:dead:beef:cafe::/64
             Done
         """
+        args = line.split(" ")
+
+        if args[0] == "":
+            value = self.prop_get(SPINEL_PROP_THREAD_ON_MESH_NETS, 'U')
+
+        elif args[0] == "add":
+            print "Error"
+            pass
+
+        elif args[0] == "remove":
+            print "Error"
+            pass
+
         pass 
 
     def do_releaserouterid(self, line): 
