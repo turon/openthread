@@ -63,16 +63,15 @@ DEBUG_LOG_TUN = 0
 DEBUG_TERM = 0
 DEBUG_CMD_RESPONSE = 0
 
-
-TIMEOUT_PING = 2
-TIMEOUT_PROP = 2
+TIMEOUT_PROP = 3
 
 gWpanApi = None
 
 def goodbye(signum=None, frame=None):
-    logger.info('\nQuitting')
+    logger.info('\nQuitting...')
     if gWpanApi:
         gWpanApi.serial.close()
+    print "Done"
     exit(1)
 
 import os
@@ -113,6 +112,7 @@ from select import select
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from scapy.all import IPv6
 from scapy.all import ICMPv6EchoRequest
+from scapy.all import ICMPv6EchoReply
 
 
 MASTER_PROMPT  = "spinel-cli"
@@ -180,10 +180,6 @@ class Color:
     DARKMAGENTA  = "\033[35m"
     DARKCYAN     = "\033[36m"
     WHITE        = "\033[37m"
-
-IP_TYPE_UDP = 17
-IP_TYPE_ICMPv6 = 58
-
 
 SPINEL_RSSI_OVERRIDE            = 127
 
@@ -589,12 +585,29 @@ class StreamSerial(IStream):
             logger.debug("RX Raw: "+hexify_bytes(b))        
         return b
 
+class StreamSocket(IStream):
+    def __init__(self, sock):
+        self.sock = sock
+
+    def write(self, data):
+        self.sock.send(data)
+        if DEBUG_LOG_TX:
+            logger.debug("TX Raw: "+str(map(hexify_chr,data)))
+
+    def read(self, size=1):
+        b = self.sock.recv(size)
+        if DEBUG_LOG_RX_BYTES:
+            logger.debug("RX Raw: "+str(map(hexify_chr,b)))        
+        return b
+
 class StreamPipe(IStream):
     def __init__(self, filename):        
         """ Create a stream object from a piped system call """
+        # Use process group to make child termination more stable.
         self.pipe = subprocess.Popen(filename, shell = True,
                                      stdin = subprocess.PIPE,
-                                     stdout = subprocess.PIPE)
+                                     stdout = subprocess.PIPE,
+                                     preexec_fn=os.setsid)
 
     def write(self, data):
         if DEBUG_LOG_TX:
@@ -607,6 +620,7 @@ class StreamPipe(IStream):
             if DEBUG_LOG_RX:
                 logger.debug("RX Raw: "+hexify_bytes(b))        
             return ord(b)
+        return None
 
     def close(self):
         if self.pipe:
@@ -906,8 +920,13 @@ class SpinelPropertyHandler(SpinelCodec):
     def THREAD_ON_MESH_NETS(self, payload):
         # TODO: automatically ipaddr add / remove addresses for each prefix.
         # As done by cli.cpp Interpreter::HandleNetifStateChanged
-        # Needs to pass control to Cmd thread in order to run prop_set/get_value.
-        pass
+        # Needs to pass control to Cmd thread in order to run prop_set/get_value
+        while (len(payload) >= 22):
+            (structlen) = unpack('>H', payload[:2])
+            payload = payload[2:]
+            (prefix, prefixlen, stable, flags, isLocal) = unpack('16sBBBB', payload[:20])
+            print "\n\n>>>> PREFIX "+hexify_str(prefix)+"/"+str(prefixlen)+" structlen="+str(structlen)
+            payload = payload[20:]
 
     def THREAD_LOCAL_ROUTES(self, payload):          pass
     def THREAD_ASSISTING_PORTS(self, payload):       pass
@@ -990,6 +1009,12 @@ class SpinelCommandHandler(SpinelCodec):
             print traceback.format_exc()            
 
 
+    def CMD_NOOP(self, payload, tid):
+        print "CMD_NOOP"
+
+    def CMD_RESET(self, payload, tid): 
+        print "CMD_RESET"
+
     def PROP_VALUE_IS(self, payload, tid): 
         self.handle_prop("IS", payload, tid)
 
@@ -1003,6 +1028,8 @@ class SpinelCommandHandler(SpinelCodec):
 wpanHandler = SpinelCommandHandler()
 
 SPINEL_COMMAND_DISPATCH = {
+    SPINEL_CMD_NOOP: wpanHandler.CMD_NOOP,
+    SPINEL_CMD_RESET: wpanHandler.CMD_RESET,
     SPINEL_RSP_PROP_VALUE_IS: wpanHandler.PROP_VALUE_IS,
     SPINEL_RSP_PROP_VALUE_INSERTED: wpanHandler.PROP_VALUE_INSERTED,
     SPINEL_RSP_PROP_VALUE_REMOVED: wpanHandler.PROP_VALUE_REMOVED,
@@ -1214,7 +1241,6 @@ class WpanApi(SpinelCodec):
         self.__queue_prop = Queue.Queue()
         self.__start_reader()
         self.tid_filter = SPINEL_HEADER_DEFAULT 
-        self.ip_type_filter = IP_TYPE_ICMPv6
 
     def __del__(self):
         self._reader_alive = False
@@ -1302,10 +1328,16 @@ class WpanApi(SpinelCodec):
 
     def queue_add(self, prop, value, tid):
         #print "Q add: tid="+str(tid)+" prop="+str(prop)+" tid_filter="+str(self.tid_filter)
-        if (tid != self.tid_filter) or (prop != self.prop_filter): return
-        if (self.prop_filter == SPINEL_PROP_STREAM_NET):
+
+        # Asynchronous handlers don't actually add
+        if (prop == SPINEL_PROP_STREAM_NET):
             pkt = IPv6(value[2:])
-            if pkt.nh != self.ip_type_filter: return
+            if ICMPv6EchoReply in pkt:
+                print "\n%d bytes from %s: icmp_seq=%d hlim=%d time=%dms" % (
+                    pkt.plen, pkt.src, pkt.seq, pkt.hlim, 80)
+            return
+
+        if (tid != self.tid_filter) or (prop != self.prop_filter): return
         item = self.PropertyItem(prop, value, tid)
         self.__queue_prop.put_nowait(item)
         
@@ -1705,9 +1737,9 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             DEBUG_ENABLE = 1
         else:
             DEBUG_ENABLE = 0
-        #DEBUG_LOG_TX = DEBUG_ENABLE
-        DEBUG_LOG_PKT = DEBUG_ENABLE
         DEBUG_LOG_PROP = DEBUG_ENABLE
+        if line == 2:
+            DEBUG_LOG_PKT = DEBUG_ENABLE
         print "DEBUG_ENABLE = "+str(DEBUG_ENABLE)
 
     def do_debugterm(self, line):
@@ -2275,22 +2307,9 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             ML64 = self.prop_get_value(SPINEL_PROP_IPV6_ML_ADDR)
             ML64 = str(ipaddress.IPv6Address(ML64))
             ping_req = str(IPv6(src=ML64, dst=addr)/ICMPv6EchoRequest())
-            self.wpanApi.queue_wait_prepare(SPINEL_PROP_STREAM_NET,
-                                            SPINEL_HEADER_ASYNC)
             self.wpanApi.ip_send(ping_req)
-            result = self.wpanApi.queue_wait_for_prop(SPINEL_PROP_STREAM_NET,
-                                                      TIMEOUT_PING)
-            if result:
-                pkt = IPv6(result.value[2:])
-                print "%d bytes from %s: icmp_seq=%d hlim=%d time=%dms" % (
-                    pkt.plen, pkt.src, pkt.seq, pkt.hlim, 80)
-                print("Done") 
-            else:
-                # Don't output anything when ping fails
-                #print "Fail"
-                pass
+            # Let handler print result
         except:
-            print "Fail"
             print traceback.format_exc()
 
     def complete_prefix(self, text, line, begidx, endidx):
@@ -2944,7 +2963,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
 
 
 if __name__ == "__main__":
-
     args = sys.argv[1:] 
 
     optParser = OptionParser()
@@ -2988,6 +3006,7 @@ if __name__ == "__main__":
     # register clean exit handlers.
     signal.signal(signal.SIGHUP, goodbye)
     signal.signal(signal.SIGINT, goodbye)
+    signal.signal(signal.SIGCONT, goodbye)
     signal.signal(signal.SIGABRT, goodbye)
     signal.signal(signal.SIGTERM, goodbye)
     signal.signal(signal.SIGPIPE, goodbye)

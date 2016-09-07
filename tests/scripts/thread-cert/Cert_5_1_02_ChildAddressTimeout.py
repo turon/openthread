@@ -99,7 +99,7 @@ class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
             if addr[0:4] != 'fe80':
                 try:
                     self.nodes[LEADER].ping(addr)
-                    self.fail()
+                    self.fail()  # Received ping reply when none expected.
                 except pexpect.TIMEOUT:
                     pass
 
@@ -109,7 +109,7 @@ class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
             if addr[0:4] != 'fe80':
                 try:
                     self.nodes[LEADER].ping(addr)
-                    self.fail()
+                    self.fail()  # Received ping reply when none expected.
                 except pexpect.TIMEOUT:
                     pass
 

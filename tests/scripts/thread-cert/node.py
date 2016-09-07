@@ -49,6 +49,7 @@ class Node:
         if self.verbose:
             self.pexpect.logfile_read = sys.stdout
 
+        self.debug(int(os.getenv('DEBUG', '0')))
         self.clear_whitelist()
         self.disable_whitelist()
         self.set_timeout(100)
@@ -88,6 +89,7 @@ class Node:
 
         self.pexpect = pexpect.spawn(cmd, timeout=2)
         time.sleep(0.1)
+        self.pexpect.delayafterterminate = 0.1
         self.pexpect.expect('spinel-cli >')
  
     def __init_soc(self, nodeid):
@@ -101,8 +103,8 @@ class Node:
             if self.node_type == 'sim':
                 self.send_command('exit')
                 self.pexpect.expect('Done')
-            elif self.node_type == 'ncp-sim':
-                self.pexpect.sendcontrol('c');
+            elif self.node_type == 'ncp-sim':		
+                self.pexpect.sendcontrol('c')
             self.pexpect.terminate()
             self.pexpect.close(force=True)
 

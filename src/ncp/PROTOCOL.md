@@ -1575,7 +1575,7 @@ The leader weight for this node.
 
 #### D.4.11. PROP 90: `PROP_THREAD_ON_MESH_NETS`
 * Type: Read-Write
-* Packed-Encoding: `A(T(6CbC))`
+* Packed-Encoding: `A(T(6CbCb))`
 
 Data per item is:
 
@@ -1583,6 +1583,7 @@ Data per item is:
 * `C`: Prefix length, in bits
 * `b`: Stable flag
 * `C`: Other flags
+* `b`: Is Local flag
 
 #### D.4.12. PROP 91: `PROP_THREAD_LOCAL_ROUTES`
 * Type: Read-Write
