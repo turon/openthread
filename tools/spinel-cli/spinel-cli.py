@@ -102,6 +102,7 @@ import serial
 import socket
 import signal
 import fcntl
+import pty
 
 from cmd import Cmd
 from copy import copy
@@ -627,6 +628,47 @@ class StreamPipe(IStream):
             self.pipe.kill()
             self.pipe = None
 
+class StreamPipe2(IStream):
+    def __init__(self, filename):        
+        """ Create a stream object from a piped system call """
+        self.master_fd, self.slave_fd = pty.openpty()
+        # Use process group to make child termination more stable.
+        self.pipe = subprocess.Popen(filename, shell = True,
+                                     stdin = self.slave_fd,
+                                     stdout = self.slave_fd,
+                                     stderr = subprocess.STDOUT,
+                                     close_fds = True)
+
+    def write(self, data):
+        if DEBUG_LOG_TX:
+            logger.debug("TX Raw: (%d) %s" % (len(data), hexify_bytes(data)))
+        os.write(self.master_fd, data)
+
+    def read(self, size=1):
+        """ Blocking read on stream object """
+        buf = []
+        while True:
+            if select([self.master_fd], [], [], 0.1)[0]:
+                # has something to read
+                b = os.read(self.master_fd, size)
+                if b: 
+                    return ord(b)
+                else: # EOF
+                    break
+            elif self.pipe.poll() is not None: # process is done
+                assert not select([self.master_fd], [], [], 0)[0] 
+                # nothing to read
+                break
+        os.close(self.slave_fd)
+        os.close(self.master_fd)
+        #self.close()
+        #print "ot-ncp fail ".join(buf), self.pipe.returncode-128
+
+    def close(self):
+        if self.pipe:
+            self.pipe.kill()
+            self.pipe = None
+
 def StreamOpen(type, descriptor):
     """ 
     Factory function that creates and opens a stream connection.
@@ -998,6 +1040,9 @@ class SpinelCommandHandler(SpinelCodec):
                     pkt = IPv6(prop_value[2:])
                     pkt.show()
 
+                elif (prop_op == SPINEL_PROP_STREAM_DEBUG):
+                    logger.debug("DEBUG: "+prop_value)
+
             if gWpanApi: 
                 gWpanApi.queue_add(prop_op, prop_value, tid)
             else:
@@ -1302,16 +1347,22 @@ class WpanApi(SpinelCodec):
     def serial_rx(self):
         # Recieve thread and parser
 
-        while self._reader_alive:
-            if self.useHdlc:
-                self.rx_pkt = self.hdlc.collect()
+        try:
+            while self._reader_alive:
+                if self.useHdlc:
+                    self.rx_pkt = self.hdlc.collect()
 
-            self.parse_rx(self.rx_pkt)
+                self.parse_rx(self.rx_pkt)
 
-            # Output RX status window
-            if DEBUG_TERM:
-                msg = str(map(hexify_int,self.rx_pkt))
-                term.print_title(["RX: "+msg])
+                # Output RX status window
+                if DEBUG_TERM:
+                    msg = str(map(hexify_int,self.rx_pkt))
+                    term.print_title(["RX: "+msg])
+
+        except:
+            print "Stopping reader Thread."
+            print traceback.format_exc()
+            goodbye()
 
     class PropertyItem(object):
         """ Queue item for NCP response to property commands. """
@@ -1434,6 +1485,11 @@ class WpanApi(SpinelCodec):
 class WpanDiagsCmd(Cmd, SpinelCodec):
     
     def __init__(self, device, *a, **kw):
+        # === Initialize Shell with some important parameters ==
+        self.wpanApi = WpanApi(device)
+        global gWpanApi
+        gWpanApi = self.wpanApi
+
         Cmd.__init__(self)
         Cmd.identchars = string.ascii_letters + string.digits + '-'
 
@@ -1462,12 +1518,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             readline.parse_and_bind("tab: complete")
             if sys.platform == 'darwin':
                 readline.parse_and_bind("bind ^I rl_complete")
-
-
-        # === Initialize Shell with some important parameters ==
-        self.wpanApi = WpanApi(device)
-        global gWpanApi
-        gWpanApi = self.wpanApi
 
         self.nodeid = kw.get('nodeid','1')
         self.prop_set_value(SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU, 1)
@@ -1730,16 +1780,22 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         Usage: debug <1=enable | 0=disable>
         """
         global DEBUG_ENABLE, DEBUG_LOG_PKT, DEBUG_LOG_PROP
-        global DEBUG_LOG_TX, DEBUG_LOG_RX
+        global DEBUG_LOG_TX, DEBUG_LOG_RX, DEBUG_LOG_HDLC
 
-        if line: line = int(line)
-        if line:
-            DEBUG_ENABLE = 1
-        else:
-            DEBUG_ENABLE = 0
-        DEBUG_LOG_PROP = DEBUG_ENABLE
-        if line == 2:
-            DEBUG_LOG_PKT = DEBUG_ENABLE
+        if line != None and line != "":
+            level = int(line)
+
+            if level: 
+                DEBUG_ENABLE = level
+                if level >= 1: DEBUG_LOG_PROP = 1
+                if level >= 2: DEBUG_LOG_PKT = 1
+                if level >= 3: DEBUG_LOG_HDLC = 1
+            else:
+                DEBUG_ENABLE = 0
+                DEBUG_LOG_PROP = 0
+                DEBUG_LOG_PKT = 0
+                DEBUG_LOG_HDLC = 0
+
         print "DEBUG_ENABLE = "+str(DEBUG_ENABLE)
 
     def do_debugterm(self, line):
@@ -1749,7 +1805,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         Usage: debug_term <1=enable | 0=disable>
         """
         global DEBUG_TERM
-        if line: line = int(line)
+        if line != None and line != "": line = int(line)
         if line: 
             DEBUG_TERM = 1
         else:
