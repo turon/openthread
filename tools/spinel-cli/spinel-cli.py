@@ -3019,6 +3019,14 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
 
 
 if __name__ == "__main__":
+    # register clean exit handlers.
+    signal.signal(signal.SIGHUP, goodbye)
+    signal.signal(signal.SIGINT, goodbye)
+    signal.signal(signal.SIGCONT, goodbye)
+    signal.signal(signal.SIGABRT, goodbye)
+    signal.signal(signal.SIGTERM, goodbye)
+    signal.signal(signal.SIGPIPE, goodbye)
+
     args = sys.argv[1:] 
 
     optParser = OptionParser()
@@ -3058,14 +3066,6 @@ if __name__ == "__main__":
 
     stream = StreamOpen(streamType, streamDescriptor)
     shell = WpanDiagsCmd(stream, nodeid=options.nodeid)
-
-    # register clean exit handlers.
-    signal.signal(signal.SIGHUP, goodbye)
-    signal.signal(signal.SIGINT, goodbye)
-    signal.signal(signal.SIGCONT, goodbye)
-    signal.signal(signal.SIGABRT, goodbye)
-    signal.signal(signal.SIGTERM, goodbye)
-    signal.signal(signal.SIGPIPE, goodbye)
 
     try:
         shell.cmdloop()
