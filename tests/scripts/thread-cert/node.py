@@ -101,7 +101,10 @@ class Node:
     def __del__(self):
         if self.pexpect.isalive():
             self.send_command('exit')
-            self.pexpect.expect('Done')
+            if self.node_type == 'soc':
+                self.pexpect.expect('Done')
+            elif self.node_type == 'ncp-sim':
+                self.pexpect.expect('Goodbye')
             self.pexpect.terminate()
             self.pexpect.close(force=True)
 

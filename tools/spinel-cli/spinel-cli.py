@@ -71,6 +71,7 @@ def goodbye(signum=None, frame=None):
     logger.info('\nQuitting...')
     if gWpanApi:
         gWpanApi.serial.close()
+    print "Goodbye"
     print "Done"
     exit(1)
 
