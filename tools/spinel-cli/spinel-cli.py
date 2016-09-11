@@ -609,7 +609,8 @@ class StreamPipe(IStream):
         self.pipe = subprocess.Popen(filename, shell = True,
                                      stdin = subprocess.PIPE,
                                      stdout = subprocess.PIPE,
-                                     preexec_fn=os.setsid)
+                                     preexec_fn=os.setpgrp)
+#                                     preexec_fn=os.setsid)
 
     def write(self, data):
         if DEBUG_LOG_TX:
@@ -626,7 +627,12 @@ class StreamPipe(IStream):
 
     def close(self):
         if self.pipe:
-            self.pipe.kill()
+            self.pipe.terminate()
+            for i in xrange(5):
+                if self.pipe.poll() is not None: break
+                time.sleep(0.1)
+            if self.pipe.poll() is None:
+                self.pipe.kill()
             self.pipe = None
 
 class StreamPipe2(IStream):
