@@ -71,9 +71,10 @@ def goodbye(signum=None, frame=None):
     logger.info('\nQuitting...')
     if gWpanApi:
         gWpanApi.serial.close()
+        
     print "Goodbye"
     print "Done"
-    exit(1)
+    exit(0)
 
 import os
 import sys
@@ -628,6 +629,7 @@ class StreamPipe(IStream):
     def close(self):
         if self.pipe:
             self.pipe.terminate()
+            out, err = self.pipe.communicate()
             for i in xrange(5):
                 if self.pipe.poll() is not None: break
                 time.sleep(0.1)

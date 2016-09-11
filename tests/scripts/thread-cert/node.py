@@ -105,8 +105,6 @@ class Node:
                 self.pexpect.expect('Done')
             elif self.node_type == 'ncp-sim':
                 self.pexpect.expect('Goodbye')
-            if self.node_type == 'ncp-sim':
-                self.sendcontrol('c')
             self.pexpect.terminate()
             self.pexpect.close(force=True)
 
