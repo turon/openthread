@@ -1367,9 +1367,10 @@ class WpanApi(SpinelCodec):
                     term.print_title(["RX: "+msg])
 
         except:
-            print "Stopping reader Thread."
-            print traceback.format_exc()
-            goodbye()
+            #logger.debug("Stopping reader Thread.")
+            #print traceback.format_exc()
+            #goodbye()
+            pass
 
     class PropertyItem(object):
         """ Queue item for NCP response to property commands. """
