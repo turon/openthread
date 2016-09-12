@@ -49,6 +49,7 @@ class Node:
         if self.verbose:
             self.pexpect.logfile_read = sys.stdout
 
+        self.debug(int(os.getenv('DEBUG', '0')))
         self.clear_whitelist()
         self.disable_whitelist()
         self.set_timeout(100)
@@ -86,8 +87,9 @@ class Node:
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 
-        self.pexpect = pexpect.spawn(cmd, timeout=2)
+        self.pexpect = pexpect.spawn(cmd, timeout=2, ignore_sighup=False)
         time.sleep(0.1)
+        self.pexpect.delayafterterminate = 0.3
         self.pexpect.expect('spinel-cli >')
  
     def __init_soc(self, nodeid):
@@ -98,11 +100,11 @@ class Node:
 
     def __del__(self):
         if self.pexpect.isalive():
-            if self.node_type == 'sim':
-                self.send_command('exit')
+            self.send_command('exit')
+            if self.node_type == 'soc':
                 self.pexpect.expect('Done')
             elif self.node_type == 'ncp-sim':
-                self.pexpect.sendcontrol('c');
+                self.pexpect.expect('Goodbye')
             self.pexpect.terminate()
             self.pexpect.close(force=True)
 
