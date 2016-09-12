@@ -606,7 +606,7 @@ class StreamPipe(IStream):
                                      stdin = subprocess.PIPE,
                                      stdout = subprocess.PIPE,
                                      stderr = subprocess.PIPE,
-                                     preexec_fn=os.setpgrp)
+                                     preexec_fn=os.setsid)
 
     def write(self, data):
         if DEBUG_LOG_TX:
