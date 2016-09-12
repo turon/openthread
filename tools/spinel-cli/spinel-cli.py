@@ -604,7 +604,9 @@ class StreamPipe(IStream):
         """ Create a stream object from a piped system call """
         self.pipe = subprocess.Popen(filename, shell = True,
                                      stdin = subprocess.PIPE,
-                                     stdout = subprocess.PIPE)
+                                     stdout = subprocess.PIPE,
+                                     stderr = subprocess.PIPE,
+                                     preexec_fn=os.setpgrp)
 
     def write(self, data):
         if DEBUG_LOG_TX:
