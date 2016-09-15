@@ -60,7 +60,6 @@ DEBUG_LOG_HDLC = 0
 DEBUG_LOG_PKT = DEBUG_ENABLE
 DEBUG_LOG_PROP = DEBUG_ENABLE
 DEBUG_LOG_TUN = 0
-DEBUG_TERM = 0
 DEBUG_CMD_RESPONSE = 0
 
 TIMEOUT_PROP = 2
@@ -78,8 +77,6 @@ import sys
 import time
 import threading
 import traceback
-
-import blessed
 
 import optparse
 from optparse import OptionParser, Option, OptionValueError
@@ -154,31 +151,9 @@ logging.config.dictConfig({
 logger = logging.getLogger(__name__)
 
 
-# Terminal macros
-
-class Color:
-    END          = '\033[0m'
-    BOLD         = '\033[1m'
-    DIM          = '\033[2m'
-    UNDERLINE    = '\033[4m'
-    BLINK        = '\033[5m'
-    REVERSE      = '\033[7m'
-
-    CYAN         = '\033[96m'
-    PURPLE       = '\033[95m'
-    BLUE         = '\033[94m'
-    YELLOW       = '\033[93m'
-    GREEN        = '\033[92m'
-    RED          = '\033[91m'
-
-    BLACK        = "\033[30m"
-    DARKRED      = "\033[31m"
-    DARKGREEN    = "\033[32m"
-    DARKYELLOW   = "\033[33m"
-    DARKBLUE     = "\033[34m"
-    DARKMAGENTA  = "\033[35m"
-    DARKCYAN     = "\033[36m"
-    WHITE        = "\033[37m"
+#=========================================
+#    SPINEL Constants
+#=========================================
 
 SPINEL_RSSI_OVERRIDE            = 127
 
@@ -527,21 +502,6 @@ SPINEL_LAST_STATUS_MAP = {
     0x400F: "kThreadError_NoTasklets",
 
 }
-
-#=========================================
-
-
-class DiagsTerminal(blessed.Terminal):
-    def print_title(self, strings=[]):
-        clr = term.green_reverse
-        title = term.white_reverse("  spinel-cli  ")
-        with term.location(x=0, y=0):
-            print (clr + term.center(title+clr))
-            for string in strings:
-                print (term.ljust(string))
-            print (term.ljust(" ") + term.normal)
-
-term = DiagsTerminal()
 
 #=========================================
     
@@ -1293,11 +1253,6 @@ class WpanApi(SpinelCodec):
 
             self.parse_rx(self.rx_pkt)
 
-            # Output RX status window
-            if DEBUG_TERM:
-                msg = str(map(hexify_int,self.rx_pkt))
-                term.print_title(["RX: "+msg])
-
     class PropertyItem(object):
         """ Queue item for NCP response to property commands. """
         def __init__(self, prop, value, tid):
@@ -1371,6 +1326,8 @@ class WpanApi(SpinelCodec):
         pay = self.encode_i(prop_id)
         if format != None:
             pay += pack(format, value)
+        elif value != None:
+            pay += value
         self.transact(cmd, pay)
 
         result = self.queue_wait_for_prop(prop_id)
@@ -1460,7 +1417,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         'clear',
         'history',
         'debug',
-        'debug-term',
 
         'v',
         'h',
@@ -1516,8 +1472,21 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         # OpenThread Spinel-specific commands
         'ncp-ml64', 
         'ncp-ll64', 
+        'ncp-mac16',
+        'ncp-mac64',
+        'ncp-mlprefix',
+
         'ncp-tun', 
 
+        'ncp-status',
+        'ncp-vendorid',
+
+        'phy-freq',
+        'phy-cca-threshold',
+        'phy-tx-power',
+        'phy-rssi',
+
+        'mac-filter-mode',
     ]
 
 
@@ -1564,15 +1533,19 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
     def prop_get_or_set_value(self, prop_id, line, format='B'):
         """ Helper to get or set a property value based on line arguments. """
         if line:
-            value = self.prop_set_value(prop_id, self.prep_line(line), format)
+            line = self.prep_line(line, format)
+            value = self.prop_set_value(prop_id, line, format)
         else:    
             value = self.prop_get_value(prop_id)
         return value
 
-    def prep_line(self, line):
+    def prep_line(self, line, format):
         """ Convert a line argument to proper type """
         if line != None: 
-            line = int(line)
+            if format == None:
+                pass
+            else:
+                line = int(line)
         return line
 
     def prop_get(self, prop_id, format='B'):
@@ -1592,7 +1565,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
 
     def prop_set(self, prop_id, line, format='B'):        
         """ Helper to set a propery and output Done or Error. """
-        arg = self.prep_line(line)
+        arg = self.prep_line(line, format)
         value = self.prop_set_value(prop_id, arg, format)
 
         if (value == None):
@@ -1725,20 +1698,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
                 DEBUG_LOG_HDLC = 0
 
         print "DEBUG_ENABLE = "+str(DEBUG_ENABLE)
-
-    def do_debugterm(self, line):
-        """
-        Enables a debug terminal display in the title bar for viewing 
-        raw NCP packets.
-        Usage: debug_term <1=enable | 0=disable>
-        """
-        global DEBUG_TERM
-        if line: line = int(line)
-        if line: 
-            DEBUG_TERM = 1
-        else:
-            DEBUG_TERM = 0
-
 
     def do_channel(self, line):
         """
@@ -2113,7 +2072,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             > masterkey 00112233445566778899aabbccddeeff
             Done
         """
-        pass 
+        self.handle_property(line, SPINEL_PROP_NET_MASTER_KEY, 'D')
 
     def do_mode(self, line): 
         """
@@ -2246,7 +2205,9 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             > networkname OpenThread
             Done
         """
-        pass 
+        format = str(len(line))+'s'     # Convert spinel 'U' to pythonic pack format
+        line = pack(format, line)
+        self.handle_property(line, SPINEL_PROP_NET_NETWORK_NAME, None)
 
     def do_panid(self, line):
         """
@@ -2727,6 +2688,43 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
     def do_ncpml64(self, line):
         """ Display the mesh local IPv6 address. """
         self.handle_property(line, SPINEL_PROP_IPV6_ML_ADDR, '6')
+
+    def do_ncpmlprefix(self, line):
+        """ Display the mesh local prefix. """
+        self.handle_property(line, SPINEL_PROP_IPV6_ML_PREFIX, 'D')
+
+    def do_ncpmac16(self, line):
+        self.handle_property(line, SPINEL_PROP_MAC_15_4_SADDR, 'H')
+
+    def do_ncpmac64(self, line):
+        self.handle_property(line, SPINEL_PROP_MAC_15_4_LADDR, 'E')
+
+    def do_ncpstatus(self, line):
+        """ Display the last status. """
+        self.handle_property(line, SPINEL_PROP_LAST_STATUS) # 'i'
+
+    def do_ncpvendorid(self, line):
+        """ Display the vendor id. """
+        self.handle_property(line, SPINEL_PROP_VENDOR_ID) # 'i'
+
+    def do_phyfreq(self, line):
+        """ Display the last status. """
+        self.handle_property(line, SPINEL_PROP_PHY_FREQ, 'L')
+
+    def do_phyccathreshold(self, line):
+        """ Display the cca threshold. """
+        self.handle_property(line, SPINEL_PROP_CCA_THRESHOLD)
+
+    def do_phytxpower(self, line):
+        """ Display the tx power level. """
+        self.handle_property(line, SPINEL_PROP_PHY_TX_POWER)
+
+    def do_phyrssi(self, line):
+        """ Display the last rssi. """
+        self.handle_property(line, SPINEL_PROP_PHY_RSSI)
+
+    def do_macfiltermode(self, line):
+        self.handle_property(line, SPINEL_PROP_MAC_FILTER_MODE)
 
     def complete_ncptun(self, text, line, begidx, endidx):
         _SUB_COMMANDS = ('up', 'down', 'add', 'del', 'ping')
