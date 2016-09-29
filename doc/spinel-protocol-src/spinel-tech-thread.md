@@ -209,3 +209,32 @@ Data per item is:
 * `b`: `true` if neighbor is a child, `false` otherwise.
 * `L`: Link Frame Counter
 * `L`: MLE Frame Counter
+
+### PROP 5632: PROP_MESHCOP_JOINER_ENABLED
+* Type: Read-Write
+* Packed-Encoding: `b`
+
+Enables the Joiner mode of operation.
+
+### PROP 5633: PROP_MESHCOP_JOINER_CREDENTIAL
+* Type: Read-Write
+* Packed-Encoding: `U`
+
+The PSKd or JPAKE "connect code" for authenticating a new Joiner device
+to the Commissioner.
+
+### PROP 5634: PROP_MESHCOP_JOINER_PROVISIONING_URL
+* Type: Read-Write
+* Packed-Encoding: `U`
+
+The optionally URL for specifying which Commissioning application is best
+suited to provision this Joiner device.
+
+### PROP 5635: PROP_MESHCOP_BORDER_AGENT_ENABLED
+* Type: Read-Write
+* Packed-Encoding: `b`
+
+Begins MeshCoP Border Agent proxy service on the node.  This will translate all
+incoming MeshCoP port :MM traffic to :MC and forward to the host, and translate
+:MC traffic destined to the NCP to appropriate :MM Thread Management Framework 
+commands.

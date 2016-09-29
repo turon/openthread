@@ -121,7 +121,7 @@ public:
     /**
      * This method sets the PSK.
      *
-     * @param[in]  aPSK  A pointer to the PSK.
+     * @param[in]  aPSK  A persistant pointer to the PSK.
      *
      * @retval kThreadError_None         Successfully set the PSK.
      * @retval kThreadError_InvalidArgs  The PSK is invalid.
@@ -207,7 +207,7 @@ private:
     void Close(void);
     void Process(void);
 
-    uint8_t mPsk[kPskMaxLength];
+    const uint8_t *mPsk;
     uint8_t mPskLength;
 
     mbedtls_entropy_context mEntropy;

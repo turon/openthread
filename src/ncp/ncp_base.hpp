@@ -340,6 +340,16 @@ private:
     ThreadError GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key);
+
+#if OPENTHREAD_ENABLE_JOINER
+    ThreadError GetPropertyHandler_MESHCOP_JOINER_ENABLED(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_MESHCOP_JOINER_CREDENTIAL(uint8_t header, spinel_prop_key_t key);
+#endif
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    ThreadError GetPropertyHandler_MESHCOP_BORDER_AGENT_ENABLED(uint8_t header, spinel_prop_key_t key);
+#endif
+
     ThreadError GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key);
 
     ThreadError SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -416,6 +426,18 @@ private:
                                                    uint16_t value_len);
 #endif
 
+#if OPENTHREAD_ENABLE_JOINER
+    ThreadError SetPropertyHandler_MESHCOP_JOINER_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+							  uint16_t value_len);
+    ThreadError SetPropertyHandler_MESHCOP_JOINER_CREDENTIAL(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+							     uint16_t value_len);
+#endif // OPENTHREAD_ENABLE_DIAG
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    ThreadError SetPropertyHandler_MESHCOP_BORDER_AGENT_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+								uint16_t value_len);
+#endif // OPENTHREAD_ENABLE_COMMISSIONER
+
     ThreadError InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                          uint16_t value_len);
     ThreadError InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -473,6 +495,15 @@ private:
     uint32_t mOutboundInsecureIpFrameCounter;  // Number of insecure outbound data/IP frames.
     uint32_t mDroppedOutboundIpFrameCounter;   // Number of dropped outbound data/IP frames.
     uint32_t mDroppedInboundIpFrameCounter;    // Number of dropped inbound data/IP frames.
+
+#if OPENTHREAD_ENABLE_JOINER
+    enum
+    {
+        kPskMaxLength = 32,
+    };
+    char mPSKd[kPskMaxLength];
+#endif
+
 };
 
 }  // namespace Thread

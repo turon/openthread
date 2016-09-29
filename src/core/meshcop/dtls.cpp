@@ -149,7 +149,7 @@ ThreadError Dtls::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
 
     VerifyOrExit(aPskLength <= sizeof(mPsk), error = kThreadError_InvalidArgs);
 
-    memcpy(mPsk, aPsk, aPskLength);
+    mPsk = aPsk;
     mPskLength = aPskLength;
 
 exit:
