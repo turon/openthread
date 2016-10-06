@@ -30,6 +30,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST              = \
     __init__.py           \
+    codec.py              \
     config.py             \
     hdlc.py               \
     stream.py             \

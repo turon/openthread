@@ -60,8 +60,6 @@ using Thread::Encoding::BigEndian::HostSwap32;
 
 namespace Thread {
 
-extern Ip6::Ip6 *sIp6;
-
 #if OPENTHREAD_ENABLE_JOINER
 enum
 {
@@ -2276,8 +2274,8 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
     {
         const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
-        strcpy(sPSKd, argv[1]);
         provisioningUrl = (argc > 2) ? argv[2] : NULL;
+        strcpy(sPSKd, argv[1]);
         otJoinerStart(mInstance, sPSKd, provisioningUrl);
     }
     else if (strcmp(argv[0], "stop") == 0)

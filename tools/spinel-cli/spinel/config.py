@@ -27,9 +27,44 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+DEBUG_ENABLE = 0
+
 DEBUG_TUN = 0
 DEBUG_HDLC = 0
 
 DEBUG_STREAM_TX = 0
 DEBUG_STREAM_RX = 0
+
+DEBUG_LOG_PKT = DEBUG_ENABLE
+DEBUG_LOG_SERIAL = DEBUG_ENABLE
+DEBUG_LOG_PROP = DEBUG_ENABLE
+DEBUG_CMD_RESPONSE = 0
+DEBUG_EXPERIMENTAL = 1
+
+
+def DebugSetLevel(level):
+    global DEBUG_ENABLE, DEBUG_LOG_PROP
+    global DEBUG_LOG_PKT, DEBUG_LOG_SERIAL
+
+    # Defaut to all logging disabled
+
+    DEBUG_ENABLE = 0
+    DEBUG_LOG_PROP = 0
+    DEBUG_LOG_PKT = 0
+    DEBUG_LOG_SERIAL = 0
+    DEBUG_HDLC = 0
+    DEBUG_STREAM_RX = 0
+    DEBUG_STREAM_TX = 0
+
+    if level:
+        DEBUG_ENABLE = level
+        if level >= 1: DEBUG_LOG_PROP = 1
+        if level >= 2: DEBUG_LOG_PKT = 1
+        if level >= 3: DEBUG_LOG_SERIAL = 1
+        if level >= 4: DEBUG_HDLC = 1
+        if level >= 5: 
+            DEBUG_STREAM_RX = 1
+            DEBUG_STREAM_TX = 1
+
+    print "DEBUG_ENABLE = "+str(DEBUG_ENABLE)
 
