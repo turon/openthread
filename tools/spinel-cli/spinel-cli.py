@@ -56,13 +56,9 @@ FEATURE_USE_SLACC = 1
 
 DEBUG_ENABLE = 0
 
-DEBUG_LOG_TX = 0
-DEBUG_LOG_RX = 0
-DEBUG_LOG_HDLC = 0
 DEBUG_LOG_PKT = DEBUG_ENABLE
 DEBUG_LOG_SERIAL = DEBUG_ENABLE
 DEBUG_LOG_PROP = DEBUG_ENABLE
-DEBUG_LOG_TUN = 0
 DEBUG_CMD_RESPONSE = 0
 DEBUG_EXPERIMENTAL = 1
 
@@ -74,7 +70,7 @@ def goodbye(signum=None, frame=None):
     if signum == None: signum = 0
     logger.info('\nQuitting (signal=%d)' % signum)
     if gWpanApi:
-        gWpanApi.serial.close()
+        gWpanApi.stream.close()
     exit(0)
 
 import os
@@ -99,8 +95,6 @@ import traceback
 import subprocess
 import Queue
 
-import serial
-import socket
 import signal
 import fcntl
 
@@ -108,7 +102,6 @@ from cmd import Cmd
 from copy import copy
 from struct import pack
 from struct import unpack
-from select import select
 from collections import namedtuple
 from collections import defaultdict
 
@@ -116,6 +109,11 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from scapy.layers.inet6 import IPv6
 from scapy.layers.inet6 import ICMPv6EchoRequest
 from scapy.layers.inet6 import ICMPv6EchoReply
+
+import spinel.config as CONFIG
+from spinel.stream import StreamOpen
+from spinel.hdlc import Hdlc
+from spinel.tun import TunInterface
 
 MASTER_PROMPT  = "spinel-cli"
 
@@ -544,197 +542,6 @@ def hex_to_bytes(s):
 def print_stack():
     for line in traceback.format_stack():
         print line.strip()
-
-#=========================================
-
-class IStream():
-    def read(self, size): pass
-    def write(self, data): pass
-    def close(self): pass
-
-class StreamSerial(IStream):
-    def __init__(self, dev, baudrate=115200):
-        comm = serial.Serial(dev, baudrate, timeout=1)
-        logger.debug("TX Raw: (%d) %s" % (len(data), hexify_bytes(data)))
-
-    def read(self, size=1):
-        b = self.sock.recv(size)
-        if DEBUG_LOG_RX:
-            logger.debug("RX Raw: "+hexify_bytes(b))
-        return b
-
-class StreamSocket(IStream):
-    def __init__(self, sock):
-        self.sock = sock
-
-    def write(self, data):
-        self.sock.send(data)
-        if DEBUG_LOG_TX:
-            logger.debug("TX Raw: "+str(map(hexify_chr,data)))
-
-    def read(self, size=1):
-        b = self.sock.recv(size)
-        if DEBUG_LOG_RX_BYTES:
-            logger.debug("RX Raw: "+str(map(hexify_chr,b)))
-        return b
-
-class StreamPipe(IStream):
-    def __init__(self, filename):
-        """ Create a stream object from a piped system call """
-        try:
-            self.pipe = subprocess.Popen(filename, shell = True,
-                                         stdin = subprocess.PIPE,
-                                         stdout = subprocess.PIPE,
-                                         stderr = sys.stdout.fileno())
-        except:
-            logger.Error("Couldn't open "+filename)
-
-    def write(self, data):
-        if DEBUG_LOG_TX:
-            logger.debug("TX Raw: (%d) %s" % (len(data), hexify_bytes(data)))
-        self.pipe.stdin.write(data)
-
-    def read(self, size=1):
-        """ Blocking read on stream object """
-        for b in iter(lambda: self.pipe.stdout.read(size), ''):
-            if DEBUG_LOG_RX:
-                logger.debug("RX Raw: "+hexify_bytes(b))
-            return ord(b)
-
-    def close(self):
-        if self.pipe:
-            self.pipe.kill()
-            self.pipe = None
-
-def StreamOpen(type, descriptor):
-    """
-    Factory function that creates and opens a stream connection.
-
-    type:
-        'u' = uart (/dev/tty#)
-        's' = socket (port #)
-        'p' = pipe (stdin/stdout)
-
-    descriptor:
-        uart - filename of device (/dev/tty#)
-        socket - port to open connection to on localhost
-        pipe - filename of command to execute and bind via stdin/stdout
-    """
-
-    if (type == 'p'):
-        print "Opening pipe to "+str(descriptor)
-        return StreamPipe(descriptor)
-
-    elif (type == 's'):
-        port = int(descriptor)
-        hostname = "localhost"
-        print "Opening socket to "+hostname+":"+str(port)
-        return StreamSocket(hostname, port)
-
-    elif (type == 'u'):
-        dev = str(descriptor)
-        baudrate = 115200
-        print "Opening serial to "+dev+" @ "+str(baudrate)
-        return StreamSerial(dev, baudrate)
-
-    else:
-        return None
-
-#=========================================
-
-HDLC_FLAG     = 0x7e
-HDLC_ESCAPE   = 0x7d
-
-# RFC 1662 Appendix C
-
-HDLC_FCS_INIT = 0xFFFF
-HDLC_FCS_POLY = 0x8408
-HDLC_FCS_GOOD = 0xF0B8
-
-
-class Hdlc(IStream):
-    def __init__(self, stream):
-        self.stream = stream
-        self.fcstab = self.mkfcstab()
-
-    def mkfcstab(self):
-        P = HDLC_FCS_POLY
-
-        def valiter():
-            for b in range(256):
-                v = b
-                i = 8
-                while i:
-                    v = (v >> 1) ^ P if v & 1 else v >> 1
-                    i -= 1
-
-                yield v & 0xFFFF
-
-        return tuple(valiter())
-
-    def fcs16(self, byte, fcs):
-        fcs = (fcs >> 8) ^ self.fcstab[(fcs ^ byte) & 0xff]
-        return fcs
-
-    def collect(self):
-        fcs = HDLC_FCS_INIT
-        packet = []
-        raw = []
-
-        # Synchronize
-        while 1:
-            b = self.stream.read()
-            if DEBUG_LOG_HDLC: raw.append(b)
-            if (b == HDLC_FLAG): break
-
-        # Read packet, updating fcs, and escaping bytes as needed
-        while 1:
-            b = self.stream.read()
-            if DEBUG_LOG_HDLC: raw.append(b)
-            if (b == HDLC_FLAG): break
-            if (b == HDLC_ESCAPE):
-                b = self.stream.read()
-                if DEBUG_LOG_HDLC: raw.append(b)
-                b ^= 0x20
-            packet.append(b)
-            fcs = self.fcs16(b, fcs)
-
-        if DEBUG_LOG_HDLC:
-            logger.debug("RX Hdlc: "+str(map(hexify_int,raw)))
-
-        if (fcs != HDLC_FCS_GOOD):
-            packet = None
-
-        return packet[:-2]        # remove FCS16 from end
-
-    def encode_byte(self, b, packet = []):
-        if (b == HDLC_ESCAPE) or (b == HDLC_FLAG):
-            packet.append(HDLC_ESCAPE)
-            packet.append(b ^ 0x20)
-        else:
-            packet.append(b)
-        return packet
-
-    def encode(self, payload = ""):
-        fcs = HDLC_FCS_INIT
-        packet = []
-        packet.append(HDLC_FLAG)
-        for b in payload:
-            b = ord(b)
-            fcs = self.fcs16(b, fcs)
-            packet = self.encode_byte(b, packet)
-
-        fcs ^= 0xffff;
-        b = fcs & 0xFF
-        packet = self.encode_byte(b, packet)
-        b = fcs >> 8
-        packet = self.encode_byte(b, packet)
-        packet.append(HDLC_FLAG)
-        packet = pack("%dB" % len(packet), *packet)
-
-        if DEBUG_LOG_HDLC:
-            logger.debug("TX Hdlc: "+hexify_bytes(packet))
-        return packet
 
 #=========================================
 
@@ -1259,125 +1066,29 @@ SPINEL_PROP_DISPATCH = {
 def DebugSetLevel(level):
     global DEBUG_ENABLE, DEBUG_LOG_PROP
     global DEBUG_LOG_PKT, DEBUG_LOG_SERIAL
-    global DEBUG_LOG_TX, DEBUG_LOG_RX, DEBUG_LOG_HDLC
+
+    # Defaut to all logging disabled
+
+    DEBUG_ENABLE = 0
+    DEBUG_LOG_PROP = 0
+    DEBUG_LOG_PKT = 0
+    DEBUG_LOG_SERIAL = 0
+    CONFIG.DEBUG_HDLC = 0
+    CONFIG.DEBUG_STREAM_RX = 0
+    CONFIG.DEBUG_STREAM_TX = 0
 
     if level:
         DEBUG_ENABLE = level
         if level >= 1: DEBUG_LOG_PROP = 1
         if level >= 2: DEBUG_LOG_PKT = 1
         if level >= 3: DEBUG_LOG_SERIAL = 1
-        if level >= 4: DEBUG_LOG_HDLC = 1
-    else:
-        DEBUG_ENABLE = 0
-        DEBUG_LOG_PROP = 0
-        DEBUG_LOG_PKT = 0
-        DEBUG_LOG_SERIAL = 0
-        DEBUG_LOG_HDLC = 0
+        if level >= 4: CONFIG.DEBUG_HDLC = 1
+        if level >= 5: 
+            CONFIG.DEBUG_STREAM_RX = 1
+            CONFIG.DEBUG_STREAM_TX = 1
 
     print "DEBUG_ENABLE = "+str(DEBUG_ENABLE)
 
-
-class TunInterface():
-    def __init__(self, id):
-        self.id = id
-        self.ifname = "tun"+str(self.id)
-
-        platform = sys.platform
-        if platform == "linux" or platform == "linux2":
-            self.__init_linux()
-        elif platform == "darwin":
-            self.__init_osx()
-
-        self.ifconfig("up")
-        #self.ifconfig("inet6 add fd00::1/64")
-        self.__start_tun_thread()
-
-    def __init_osx(self):
-        logger.info("TUN: Starting osx "+self.ifname)
-        filename = "/dev/"+self.ifname
-        self.tun = os.open(filename, os.O_RDWR)
-        self.fd = self.tun
-        # trick osx to auto-assign a link local address
-        self.addr_add("fe80::1")
-        self.addr_del("fe80::1")
-
-    def __init_linux(self):
-        logger.info("TUN: Starting linux "+self.ifname)
-        self.tun = open("/dev/net/tun", "r+b")
-        self.fd = self.tun.fileno()
-
-        IFF_TUNSETIFF = 0x400454ca
-        IFF_TUNSETOWNER = IFF_TUNSETIFF + 2
-        IFF_TUN = 0x0001
-        IFF_TAP = 0x0002
-        IFF_NO_PI = 0x1000
-
-        ifr = pack("16sH", self.ifname, IFF_TUN | IFF_NO_PI)
-        fcntl.ioctl(self.tun, IFF_TUNSETIFF, ifr)      # Name interface tun#
-        fcntl.ioctl(self.tun, IFF_TUNSETOWNER, 1000)   # Allow non-sudo access
-
-    def close(self):
-        if self.tun:
-            os.close(self.fd)
-            self.fd = None
-            self.tun = None
-
-    def command(self, cmd):
-        subprocess.check_call(cmd, shell=True)
-
-    def ifconfig(self, args):
-        """ Bring interface up and/or assign addresses. """
-        self.command('ifconfig '+self.ifname+' '+args)
-
-    def ping6(self, args):
-        """ Ping an address. """
-        cmd = 'ping6 '+args
-        print cmd
-        self.command(cmd)
-
-    def addr_add(self, addr):
-        self.ifconfig('inet6 add '+addr)
-
-    def addr_del(self, addr):
-        platform = sys.platform
-        if platform == "linux" or platform == "linux2":
-            self.ifconfig('inet6 del '+addr)
-        elif platform == "darwin":
-            self.ifconfig('inet6 delete '+addr)
-
-    def write(self, packet):
-        global gWpanApi
-        gWpanApi.ip_send(packet)
-        #os.write(self.fd, packet)    # Loop back
-        if DEBUG_LOG_TUN:
-            logger.debug("\nTUN: TX ("+str(len(packet))+") "+hexify_str(packet))
-
-    def __run_tun_thread(self):
-        while self.fd:
-            try:
-                r = select([self.fd],[],[])[0][0]
-                if r == self.fd:
-                    packet = os.read(self.fd, 4000)
-                    if DEBUG_LOG_TUN:
-                        logger.debug("\nTUN: RX ("+str(len(packet))+") "+
-                                  hexify_str(packet))
-                    self.write(packet)
-            except:
-                print traceback.format_exc()
-                break
-
-        logger.info("TUN: exiting")
-        if self.fd:
-            os.close(self.fd)
-            self.fd = None
-
-    def __start_tun_thread(self):
-        """Start reader thread"""
-        self._reader_alive = True
-        # start serial->console thread
-        self.receiver_thread = threading.Thread(target=self.__run_tun_thread)
-        self.receiver_thread.setDaemon(True)
-        self.receiver_thread.start()
 
 
 class WpanApi(SpinelCodec):
@@ -1386,18 +1097,18 @@ class WpanApi(SpinelCodec):
     def __init__(self, stream, nodeid, useHdlc=FEATURE_USE_HDLC):
 
         self.tunIf = None
-        self.serial = stream
+        self.stream = stream
         self.nodeid = nodeid
 
         self.useHdlc = useHdlc
         if self.useHdlc:
-            self.hdlc = Hdlc(self.serial)
+            self.hdlc = Hdlc(self.stream)
 
         # PARSER state
         self.rx_pkt = []
 
         # Fire up threads
-        self.tid_filter = set()
+        self.tidFilter = set()
         self.__queue_prop = defaultdict(Queue.Queue)
         self.queue_register()
         self.__start_reader()
@@ -1409,7 +1120,7 @@ class WpanApi(SpinelCodec):
         """Start reader thread"""
         self._reader_alive = True
         # start serial->console thread
-        self.receiver_thread = threading.Thread(target=self.serial_rx)
+        self.receiver_thread = threading.Thread(target=self.stream_rx)
         self.receiver_thread.setDaemon(True)
         self.receiver_thread.start()
 
@@ -1420,7 +1131,7 @@ class WpanApi(SpinelCodec):
             logger.debug(msg)
 
         if self.useHdlc: pkt = self.hdlc.encode(pkt)
-        self.serial_tx(pkt)
+        self.stream_tx(pkt)
 
     def parse_rx(self, pkt):
         if DEBUG_LOG_SERIAL:
@@ -1454,12 +1165,12 @@ class WpanApi(SpinelCodec):
             logger.info ("===> %s" % hexify_str(payload))
 
 
-    def serial_tx(self, pkt):
-        # Encapsulate lagging and Framer support in self.serial class.
-        self.serial.write(pkt)
+    def stream_tx(self, pkt):
+        # Encapsulate lagging and Framer support in self.stream class.
+        self.stream.write(pkt)
 
 
-    def serial_rx(self):
+    def stream_rx(self):
         """ Recieve thread and parser. """
         while self._reader_alive:
             if self.useHdlc:
@@ -1476,7 +1187,7 @@ class WpanApi(SpinelCodec):
             self.tid = tid
 
     def queue_register(self, tid=SPINEL_HEADER_DEFAULT):
-        self.tid_filter.add(tid)
+        self.tidFilter.add(tid)
         return self.__queue_prop[tid]
 
     def queue_wait_prepare(self, prop_id, tid=SPINEL_HEADER_DEFAULT):
@@ -1493,7 +1204,7 @@ class WpanApi(SpinelCodec):
                     pkt.plen, pkt.src, pkt.seq, pkt.hlim, timedelta)
             return
 
-        if (tid not in self.tid_filter): return
+        if (tid not in self.tidFilter): return
         item = self.PropertyItem(prop, value, tid)
         self.__queue_prop[tid].put_nowait(item)
 

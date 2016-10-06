@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -26,25 +27,28 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+import unittest
+import binascii
 
-EXTRA_DIST              = \
-    spinel-cli.py         \
-    test_spinel.py        \
-    $(NULL)
+from spinel.hdlc import Hdlc
 
-DIST_SUBDIRS                            = \
-    spinel                                \
-    $(NULL)
+# Here's our "unit tests".
+class HdlcTests(unittest.TestCase):
+    VECTOR = {
+        # Data    HDLC Encoded
+        "810243": "7e810243d3d37e",
+        "8103367e7d": "7e8103367d5e7d5d6af97e",
+    }
 
-# Always build (e.g. for 'make all') these subdirectories.
+    def testHdlcEncode(self):
+        hdlc = Hdlc(None)
+        for inHex, outHex in self.VECTOR.iteritems():
+            inBinary = binascii.unhexlify(inHex)
+            outBinary = hdlc.encode(inBinary)
+            #print "inHex = "+binascii.hexlify(inBinary)
+            #print "outHex = "+binascii.hexlify(outBinary)
+            self.failUnless(outHex == binascii.hexlify(outBinary))
+        
+    def testHdlcDecode(self):
+        pass
 
-SUBDIRS                                 = \
-    $(NULL)
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    $(NULL)
-
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am

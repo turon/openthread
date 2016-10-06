@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -26,25 +27,13 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+import unittest
 
-EXTRA_DIST              = \
-    spinel-cli.py         \
-    test_spinel.py        \
-    $(NULL)
+from spinel.tests import *
 
-DIST_SUBDIRS                            = \
-    spinel                                \
-    $(NULL)
+def main():
+    unittest.main()
 
-# Always build (e.g. for 'make all') these subdirectories.
+if __name__ == '__main__':
+    main()
 
-SUBDIRS                                 = \
-    $(NULL)
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    $(NULL)
-
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am

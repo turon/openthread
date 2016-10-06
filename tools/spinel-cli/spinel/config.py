@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -26,25 +27,9 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+DEBUG_TUN = 0
+DEBUG_HDLC = 0
 
-EXTRA_DIST              = \
-    spinel-cli.py         \
-    test_spinel.py        \
-    $(NULL)
+DEBUG_STREAM_TX = 0
+DEBUG_STREAM_RX = 0
 
-DIST_SUBDIRS                            = \
-    spinel                                \
-    $(NULL)
-
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    $(NULL)
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    $(NULL)
-
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
