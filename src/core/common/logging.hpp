@@ -100,6 +100,7 @@ extern "C" {
 #define _OT_REGION_CLI_PREFIX "-CLI-----: "
 #define _OT_REGION_CORE_PREFIX "-CORE----: "
 #define _OT_REGION_UTIL_PREFIX "-UTIL----: "
+#define _OT_REGION_BLE_PREFIX "-BLE----: "
 #else
 #define _OT_REGION_API_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLE_PREFIX _OT_REGION_SUFFIX
@@ -117,6 +118,7 @@ extern "C" {
 #define _OT_REGION_CLI_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_CORE_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_UTIL_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_BLE_PREFIX _OT_REGION_SUFFIX
 #endif
 
 /**
@@ -1152,6 +1154,83 @@ extern "C" {
 #endif
 
 /**
+ * @def otLogCritBle
+ *
+ * This method generates a log with level critical for the Ble region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnBle
+ *
+ * This method generates a log with level warning for the Ble region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoBle
+ *
+ * This method generates a log with level note for the Ble region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoBle
+ *
+ * This method generates a log with level info for the Ble region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgBle
+ *
+ * This method generates a log with level debug for the Ble region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_BLE == 1
+
+#define otLogCritBle(aInstance, aFormat, ...) \
+    otLogCrit(&aInstance, OT_LOG_REGION_BLE, _OT_REGION_BLE_PREFIX aFormat, ##__VA_ARGS__)
+#define otLogWarnBle(aInstance, aFormat, ...) \
+    otLogWarn(&aInstance, OT_LOG_REGION_BLE, _OT_REGION_BLE_PREFIX aFormat, ##__VA_ARGS__)
+#define otLogNoteBle(aInstance, aFormat, ...) \
+    otLogNote(&aInstance, OT_LOG_REGION_BLE, _OT_REGION_BLE_PREFIX aFormat, ##__VA_ARGS__)
+#define otLogInfoBle(aInstance, aFormat, ...) \
+    otLogInfo(&aInstance, OT_LOG_REGION_BLE, _OT_REGION_BLE_PREFIX aFormat, ##__VA_ARGS__)
+#define otLogInfoBleErr(aInstance, aError, aFormat, ...) \
+    otLogInfo(&aInstance, OT_LOG_REGION_BLE, "Error %s: " aFormat, otThreadErrorToString(aError), ##__VA_ARGS__)
+#define otLogDebgBle(aInstance, aFormat, ...) \
+    otLogDebg(&aInstance, OT_LOG_REGION_BLE, _OT_REGION_BLE_PREFIX aFormat, ##__VA_ARGS__)
+#else
+#define otLogCritBle(aInstance, aFormat, ...)
+#define otLogWarnBle(aInstance, aFormat, ...)
+#define otLogNoteBle(aInstance, aFormat, ...)
+#define otLogInfoBle(aInstance, aFormat, ...)
+#define otLogInfoBleErr(aInstance, aError, aFormat, ...)
+#define otLogDebgBle(aInstance, aFormat, ...)
+#endif
+
+/**
  * @def otLogCritCli
  *
  * This method generates a log with level critical for the CLI region.
@@ -1618,6 +1697,63 @@ extern "C" {
 #define otDumpNoteMle(aInstance, aId, aBuf, aLength)
 #define otDumpInfoMle(aInstance, aId, aBuf, aLength)
 #define otDumpDebgMle(aInstance, aId, aBuf, aLength)
+#endif
+
+/**
+ * @def otDumpCritBle
+ *
+ * This method generates a memory dump with log level debug and region BLE.
+ *
+ * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf     A pointer to the buffer.
+ * @param[in]  aLength  Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpWarnBle
+ *
+ * This method generates a memory dump with log level warning and region BLE.
+ *
+ * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf     A pointer to the buffer.
+ * @param[in]  aLength  Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpInfoBle
+ *
+ * This method generates a memory dump with log level info and region BLE.
+ *
+ * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf     A pointer to the buffer.
+ * @param[in]  aLength  Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpDebgBle
+ *
+ * This method generates a memory dump with log level debug and region BLE.
+ *
+ * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf     A pointer to the buffer.
+ * @param[in]  aLength  Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_BLE == 1
+#define otDumpCritBle(aInstance, aId, aBuf, aLength) otDumpCrit(aInstance, OT_LOG_REGION_BLE, aId, aBuf, aLength)
+#define otDumpWarnBle(aInstance, aId, aBuf, aLength) otDumpWarn(aInstance, OT_LOG_REGION_BLE, aId, aBuf, aLength)
+#define otDumpNoteBle(aInstance, aId, aBuf, aLength) otDumpNote(aInstance, OT_LOG_REGION_MLE, aId, aBuf, aLength)
+#define otDumpInfoBle(aInstance, aId, aBuf, aLength) otDumpInfo(aInstance, OT_LOG_REGION_BLE, aId, aBuf, aLength)
+#define otDumpDebgBle(aInstance, aId, aBuf, aLength) otDumpDebg(aInstance, OT_LOG_REGION_BLE, aId, aBuf, aLength)
+#else
+#define otDumpCritBle(aInstance, aId, aBuf, aLength)
+#define otDumpWarnBle(aInstance, aId, aBuf, aLength)
+#define otDumpNoteBle(aInstance, aId, aBuf, aLength)
+#define otDumpInfoBle(aInstance, aId, aBuf, aLength)
+#define otDumpDebgBle(aInstance, aId, aBuf, aLength)
 #endif
 
 /**

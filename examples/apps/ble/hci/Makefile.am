@@ -30,7 +30,10 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 include $(top_srcdir)/examples/platforms/Makefile.platform.am
 
 bin_PROGRAMS                                                           = \
+    lebeacon                                                             \
+    lescan                                                               \
     $(NULL)
+
 
 CPPFLAGS_COMMON                                                       += \
     -I$(top_srcdir)/include                                              \
@@ -39,16 +42,11 @@ CPPFLAGS_COMMON                                                       += \
     $(NULL)
 
 LDADD_COMMON                                                          += \
-    $(NULL)
-
-LDFLAGS_COMMON                                                        += \
-    $(NULL)
-
-LIBTOOLFLAGS_COMMON                                                   += \
+    $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(NULL)
 
 SOURCES_COMMON                                                        += \
-    main.c                                                               \
+    stub_runtime.c                                                       \
     $(NULL)
 
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
@@ -63,73 +61,50 @@ LDADD_COMMON                                                          += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_DIAG
 
-if OPENTHREAD_ENABLE_FTD
-bin_PROGRAMS                                                          += \
-    ot-cli-ftd                                                           \
-    $(NULL)
-endif
 
-ot_cli_ftd_CPPFLAGS                                                    = \
+lebeacon_CPPFLAGS                                                      = \
     $(CPPFLAGS_COMMON)                                                   \
     $(NULL)
 
-# List libraries twice to resolve circular dependencies.
-ot_cli_ftd_LDADD                                                       = \
-    $(top_builddir)/src/cli/libopenthread-cli-ftd.a                      \
-    $(top_builddir)/src/core/libopenthread-ftd.a                         \
+lebeacon_LDADD                                                         = \
     $(LDADD_COMMON)                                                      \
-    $(top_builddir)/src/cli/libopenthread-cli-ftd.a                      \
-    $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
     $(NULL)
 
-ot_cli_ftd_LDFLAGS                                                     = \
+lebeacon_LDFLAGS                                                       = \
     $(LDFLAGS_COMMON)                                                    \
     $(NULL)
 
-ot_cli_ftd_LIBTOOLFLAGS                                                = \
+lebeacon_LIBTOOLFLAGS                                                  = \
     $(LIBTOOLFLAGS_COMMON)                                               \
     $(NULL)
 
-ot_cli_ftd_SOURCES                                                     = \
+lebeacon_SOURCES                                                       = \
+    lebeacon.cpp                                                         \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
 
-if OPENTHREAD_ENABLE_MTD
-bin_PROGRAMS                                                          += \
-    ot-cli-mtd                                                           \
-    $(NULL)
-endif
-
-ot_cli_mtd_CPPFLAGS                                                    = \
+lescan_CPPFLAGS                                                        = \
     $(CPPFLAGS_COMMON)                                                   \
     $(NULL)
 
-ot_cli_mtd_LDADD                                                       = \
-    $(top_builddir)/src/cli/libopenthread-cli-mtd.a                      \
-    $(top_builddir)/src/core/libopenthread-mtd.a                         \
+lescan_LDADD                                                           = \
     $(LDADD_COMMON)                                                      \
-    $(top_builddir)/src/cli/libopenthread-cli-mtd.a                      \
-    $(top_builddir)/src/core/libopenthread-mtd.a                         \
     $(LDADD_COMMON)                                                      \
     $(NULL)
 
-ot_cli_mtd_LDFLAGS                                                     = \
+lescan_LDFLAGS                                                         = \
     $(LDFLAGS_COMMON)                                                    \
     $(NULL)
 
-ot_cli_mtd_LIBTOOLFLAGS                                                = \
+lescan_LIBTOOLFLAGS                                                    = \
     $(LIBTOOLFLAGS_COMMON)                                               \
     $(NULL)
 
-ot_cli_mtd_SOURCES                                                     = \
+lescan_SOURCES                                                         = \
+    lescan.cpp                                                           \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
-
-if OPENTHREAD_ENABLE_LINKER_MAP
-ot_cli_ftd_LDFLAGS                                                    += -Wl,-Map=ot-cli-ftd.map
-ot_cli_mtd_LDFLAGS                                                    += -Wl,-Map=ot-cli-mtd.map
-endif
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)

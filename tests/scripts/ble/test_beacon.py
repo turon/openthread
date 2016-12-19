@@ -1,5 +1,6 @@
+#!/usr/bin/env python
 #
-#  Copyright (c) 2017, The OpenThread Authors.
+#  Copyright (c) 2016-2017, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,22 +27,39 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-#
-# posix platform-specific Makefile
-#
+import os
+import sys
+import time
+import pexpect
+import unittest
+import subprocess
 
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
-    -lstdc++                                                             \
-    $(NULL)
+from node_cli import Node
 
-if OPENTHREAD_ENABLE_BLE_SIM
-LDADD_COMMON += -lbluetooth
-endif # OPENTHREAD_ENABLE_BLE_SIM
+SCANNER = 1
+BEACONER = 2
+NODE_COUNT = 2
 
-if OPENTHREAD_BLE_HOST_NIMBLE
-LDADD_COMMON                                                          += \
-    -lrt -lpthread                                                       \
-    $(top_builddir)/third_party/mynewt-nimble/libnimble.a                \
-    $(NULL)
-endif # OPENTHREAD_BLE_HOST_NIMBLE
+class test_beacon(unittest.TestCase):
+    def setUp(self):
+        self.nodes = Node.setUp(NODE_COUNT)
+
+    def tearDown(self):
+        del self.nodes
+        Node.tearDown()
+
+    def test_beacon(self):
+        self.nodes[SCANNER].ble_start()
+        self.nodes[SCANNER].ble_scan_start()
+
+        self.nodes[BEACONER].ble_start()
+        addr = self.nodes[BEACONER].ble_get_bdaddr()
+        self.nodes[BEACONER].ble_adv_data("0201060302affe")
+        self.nodes[BEACONER].ble_adv_start(500)
+
+        print "Expect: Got BLE_ADV from %s \[1\] - 0201060302affe" % (addr)
+        rsp = "Got BLE_ADV from %s \[1\] - 0201060302affe" % (addr)
+        self.nodes[SCANNER].pexpect.expect(rsp)
+
+if __name__ == '__main__':
+    unittest.main()

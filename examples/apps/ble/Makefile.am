@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2017, The OpenThread Authors.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,22 +26,27 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-#
-# posix platform-specific Makefile
-#
+include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
-    -lstdc++                                                             \
+# Always package (e.g. for 'make dist') these subdirectories.
+
+DIST_SUBDIRS                            = \
+    hci                                   \
     $(NULL)
 
-if OPENTHREAD_ENABLE_BLE_SIM
-LDADD_COMMON += -lbluetooth
-endif # OPENTHREAD_ENABLE_BLE_SIM
+# Always build (e.g. for 'make all') these subdirectories.
+
+SUBDIRS                                 = \
+    $(NULL)
 
 if OPENTHREAD_BLE_HOST_NIMBLE
-LDADD_COMMON                                                          += \
-    -lrt -lpthread                                                       \
-    $(top_builddir)/third_party/mynewt-nimble/libnimble.a                \
+SUBDIRS                                += hci
+endif
+
+# Always pretty (e.g. for 'make pretty') these subdirectories.
+
+PRETTY_SUBDIRS                          = \
+    hci                                   \
     $(NULL)
-endif # OPENTHREAD_BLE_HOST_NIMBLE
+
+include $(abs_top_nlbuild_autotools_dir)/automake/post.am
