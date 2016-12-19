@@ -31,9 +31,11 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 lib_LIBRARIES                             = libopenthread-posix.a
 
 libopenthread_posix_a_CPPFLAGS            = \
+    -fPIC                                   \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/examples/platforms      \
     -I$(top_srcdir)/src/core                \
+    -I$(top_srcdir)/src/lib                 \
     -D_GNU_SOURCE                           \
     $(NULL)
 
@@ -53,8 +55,44 @@ PLATFORM_SOURCES                          = \
     sim/radio-sim.c                         \
     $(NULL)
 
+
+if OPENTHREAD_BLE_HOST_NIMBLE
+PLATFORM_SOURCES                         += \
+    ble_nimble.c                            \
+    ble_nimble_event.c                      \
+    ble_stub.cpp                            \
+    $(NULL)
+
+libopenthread_posix_a_CPPFLAGS           +=                                             \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/porting/npl/linux/include            \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/porting/npl/linux/src                \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/porting/examples/linux/include       \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/porting/nimble/include               \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/include                       \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/host/include                  \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/host/src                      \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/host/services/ans/include     \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/host/services/gap/include     \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/host/services/gatt/include    \
+    $(NULL)
+
+# Do not enable -pedantic-errors
+override CFLAGS      := $(filter-out -pedantic-errors,$(CFLAGS))
+override CXXFLAGS    := $(filter-out -pedantic-errors,$(CXXFLAGS))
+
+# Do not enable warnings as errors
+override CFLAGS      := $(filter-out -Werror,$(CFLAGS))
+override CXXFLAGS    := $(filter-out -Werror,$(CXXFLAGS))
+
+# Do not enable strict C99 checks
+override CFLAGS      := $(filter-out -std=c99,$(CFLAGS))
+override CXXFLAGS    := $(filter-out -std=c99,$(CXXFLAGS))
+
+endif # OPENTHREAD_BLE_HOST_NIMBLE
+
+
 libopenthread_posix_a_SOURCES             = \
-     $(PLATFORM_SOURCES)                    \
+    $(PLATFORM_SOURCES)                     \
     $(NULL)
 
 noinst_HEADERS                            = \

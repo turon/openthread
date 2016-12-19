@@ -49,10 +49,33 @@ DIST_SUBDIRS                            = \
     mbedtls                               \
     $(NULL)
 
-if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 SUBDIRS                                 = \
+    $(NULL)
+
+if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
+SUBDIRS                                += \
     mbedtls                               \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
+
+if OPENTHREAD_ENABLE_BLE_SIM
+DIST_SUBDIRS                           += \
+    bluez/repo                            \
+    $(NULL)
+
+SUBDIRS                                += \
+    bluez/repo                            \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_BLE_SIM
+
+if OPENTHREAD_BLE_HOST_NIMBLE
+DIST_SUBDIRS                           += \
+    mynewt-nimble                         \
+    $(NULL)
+
+SUBDIRS                                += \
+    mynewt-nimble                         \
+    $(NULL)
+endif # OPENTHREAD_BLE_HOST_NIMBLE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

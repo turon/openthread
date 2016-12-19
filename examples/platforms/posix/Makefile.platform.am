@@ -33,3 +33,14 @@
 LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
     $(NULL)
+
+if OPENTHREAD_ENABLE_BLE_SIM
+LDADD_COMMON += -lbluetooth
+endif # OPENTHREAD_ENABLE_BLE_SIM
+
+if OPENTHREAD_BLE_HOST_NIMBLE
+LDADD_COMMON                                                          += \
+    -lrt -lpthread -lstdc++                                              \
+    $(top_builddir)/third_party/mynewt-nimble/libnimble.a                \
+    $(NULL)
+endif # OPENTHREAD_BLE_HOST_NIMBLE

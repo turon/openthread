@@ -136,9 +136,21 @@ cd /tmp || die
         sudo apt-get install llvm-3.4-runtime || die
     }
 
-    [ $BUILD_TARGET != posix -o "$CC" != clang ] || {
+    [ $BUILD_TARGET != posix-ble ] || {
+        sudo apt-get install libdbus-1-dev || die
+        sudo apt-get install libudev-dev || die
+        sudo apt-get install libglib2.0-dev || die
+        sudo apt-get install libical-dev || die
+        sudo apt-get install libreadline-dev || die
+        sudo apt-get install libbluetooth-dev || die
+
+        sudo pip install pexpect || die
+    }
+
+    [ $BUILD_TARGET != posix -o $CC != clang ] || {
         sudo apt-get install clang || die
     }
+    
 
     [ $BUILD_TARGET != toranj-test-framework ] || {
         # packages for wpantund

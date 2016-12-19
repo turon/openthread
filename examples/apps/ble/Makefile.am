@@ -1,6 +1,5 @@
-#!/bin/sh
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,38 +25,28 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-#    Description:
-#      This file is a trampoline script to the nlbuild-autotools
-#      bootstrap script and augments it by providing the path to the
-#      nlbuild-autotools repository for this project.
-#
 
-# Set this to the relative location of nlbuild-autotools to this script
+include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-nlbuild_autotools_stem="third_party/nlbuild-autotools/repo"
+# Always package (e.g. for 'make dist') these subdirectories.
 
-subdirs=`autoconf --trace=AC_CONFIG_SUBDIRS:$% configure.ac`
+DIST_SUBDIRS                            = \
+    hci                                   \
+    $(NULL)
 
-# Bootstrap the child directories mentioned in AC_CONFIG_SUBDIRS.
-# These bootstrap files must exist.
-for d in $subdirs
-do
-    if test -d "$d"; then
-        echo "Bootstrapping $d..."
-        if test -f $d/bootstrap; then
-            # good...
-            (cd $d; /bin/sh ./bootstrap)
-        else
-            echo "bootstrap: no file $d/bootstrap" >&2
-            exit 1
-        fi
-    fi
-done
+# Always build (e.g. for 'make all') these subdirectories.
 
-# Establish some key directories
+SUBDIRS                                 = \
+    $(NULL)
 
-srcdir=`dirname ${0}`
-abs_srcdir=`pwd`
-abs_top_srcdir="${abs_srcdir}"
+if OPENTHREAD_BLE_HOST_NIMBLE
+SUBDIRS                                += hci
+endif
 
-exec ${srcdir}/${nlbuild_autotools_stem}/scripts/bootstrap -I "${abs_top_srcdir}/${nlbuild_autotools_stem}" $*
+# Always pretty (e.g. for 'make pretty') these subdirectories.
+
+PRETTY_SUBDIRS                          = \
+    hci                                   \
+    $(NULL)
+
+include $(abs_top_nlbuild_autotools_dir)/automake/post.am

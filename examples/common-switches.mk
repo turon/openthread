@@ -99,6 +99,18 @@ ifeq ($(JOINER),1)
 configure_OPTIONS              += --enable-joiner
 endif
 
+ifeq ($(BLE),1)
+configure_OPTIONS              += --enable-ble
+endif
+
+ifeq ($(BLE_SIM),1)
+configure_OPTIONS              += --enable-ble-hci
+endif
+
+ifeq ($(BLE_HOST),nimble)
+configure_OPTIONS              += --with-ble-host=nimble
+endif
+
 ifeq ($(LEGACY),1)
 configure_OPTIONS              += --enable-legacy
 endif
@@ -138,6 +150,7 @@ ifeq ($(FULL_LOGS),1)
 LOG_FLAGS += -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG
 LOG_FLAGS += -DOPENTHREAD_CONFIG_LOG_API=1
 LOG_FLAGS += -DOPENTHREAD_CONFIG_LOG_ARP=1
+LOG_FLAGS += -DOPENTHREAD_CONFIG_LOG_BLE=1
 LOG_FLAGS += -DOPENTHREAD_CONFIG_LOG_CLI=1
 LOG_FLAGS += -DOPENTHREAD_CONFIG_LOG_COAP=1
 LOG_FLAGS += -DOPENTHREAD_CONFIG_LOG_ICMP=1

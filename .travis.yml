@@ -32,7 +32,11 @@ python: "3.6"
 sudo: required
 dist: trusty
 
+git:
+  submodules: false
+
 before_install:
+  - git submodule update --init --remote
   - .travis/before_install.sh
 
 before_script:
@@ -55,6 +59,9 @@ matrix:
       os: linux
       compiler: gcc
     - env: BUILD_TARGET="posix-app-pty" VERBOSE=1
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="posix-ble" VERBOSE=1
       os: linux
       compiler: gcc
     - env: BUILD_TARGET="android-build" VERBOSE=1

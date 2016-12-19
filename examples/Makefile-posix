@@ -110,6 +110,7 @@ CXXFLAGS                       += \
 
 LDFLAGS                        += \
     $(COMMONCFLAGS)               \
+    -Wl,-Map=map.map              \
     $(NULL)
 
 INSTALL                         := /usr/bin/install
