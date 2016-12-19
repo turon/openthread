@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env python
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,38 +26,47 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-#    Description:
-#      This file is a trampoline script to the nlbuild-autotools
-#      bootstrap script and augments it by providing the path to the
-#      nlbuild-autotools repository for this project.
-#
 
-# Set this to the relative location of nlbuild-autotools to this script
+import os
+import sys
+import time
+import pexpect
+import unittest
+import subprocess
 
-nlbuild_autotools_stem="third_party/nlbuild-autotools/repo"
+from node_cli import Node
 
-subdirs=`autoconf --trace=AC_CONFIG_SUBDIRS:$% configure.ac`
+CENTRAL = 1
+PERIPHERAL = 2
+NODE_COUNT = 2
 
-# Bootstrap the child directories mentioned in AC_CONFIG_SUBDIRS.
-# These bootstrap files must exist.
-for d in $subdirs
-do
-    if test -d "$d"; then
-        echo "Bootstrapping $d..."
-        if test -f $d/bootstrap; then
-            # good...
-            (cd $d; /bin/sh ./bootstrap)
-        else
-            echo "bootstrap: no file $d/bootstrap" >&2
-            exit 1
-        fi
-    fi
-done
+class test_conn(unittest.TestCase):
+    def setUp(self):
+        self.nodes = Node.setUp(NODE_COUNT)
 
-# Establish some key directories
+    def tearDown(self):
+        del self.nodes
+        Node.tearDown()
 
-srcdir=`dirname ${0}`
-abs_srcdir=`pwd`
-abs_top_srcdir="${abs_srcdir}"
+    def test_connection(self):
+        self.nodes[CENTRAL].ble_start()
 
-exec ${srcdir}/${nlbuild_autotools_stem}/scripts/bootstrap -I "${abs_top_srcdir}/${nlbuild_autotools_stem}" $*
+        self.nodes[PERIPHERAL].ble_start()
+        self.nodes[PERIPHERAL].ble_adv_data("0201060302affe")
+        self.nodes[PERIPHERAL].ble_adv_start(500)
+        dst_addr = self.nodes[PERIPHERAL].ble_get_bdaddr()
+
+        self.nodes[CENTRAL].ble_conn_start(dst_addr, 1)
+
+        self.nodes[CENTRAL].pexpect.expect("connected: @id=")
+        self.nodes[PERIPHERAL].pexpect.expect("connected: @id=")
+
+        psm = 0x55
+        self.nodes[CENTRAL].ble_ch_start(psm)
+        self.nodes[CENTRAL].pexpect.expect("L2CAP connect request: @psm=%d" % (psm))
+
+        self.nodes[CENTRAL].ble_ch_tx("bdbdbdbd")
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -228,6 +228,22 @@ void platformUartProcess(void);
 void platformUartRestore(void);
 
 /**
+ * This function updates the file descriptor sets with file descriptors used by the BLE driver.
+ *
+ * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ *
+ */
+void platformBleUpdateFdSet(fd_set *aReadFdSet, int *aMaxFd);
+
+/**
+ * This function performs ble driver processing.
+ *
+ */
+void platformBleProcess(otInstance *aInstance);
+
+/**
  * This function sends a simulation event.
  *
  * @param[in]   aEvent  A pointer to the simulation event to send

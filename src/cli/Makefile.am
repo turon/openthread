@@ -151,6 +151,12 @@ SOURCES_COMMON =                      \
     cli_udp_example.cpp               \
     $(NULL)
 
+if OPENTHREAD_ENABLE_BLE
+SOURCES_COMMON                     += \
+    cli_ble.cpp                       \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_BLE
+
 libopenthread_cli_ftd_a_SOURCES =     \
     $(SOURCES_COMMON)                 \
     $(NULL)

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,66 +26,20 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-posix.h"
+#include <openthread/instance.h>
 
-#include <assert.h>
-#include <setjmp.h>
-#include <unistd.h>
+/**
+ * @file
+ *   This file implements SoC runtime callbacks that aren't needed by the
+ * ble command line tests.
+ */
 
-#include <openthread/platform/misc.h>
-
-#include "openthread-system.h"
-
-jmp_buf gResetJump;
-
-static otPlatResetReason   sPlatResetReason   = OT_PLAT_RESET_REASON_POWER_ON;
-static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
-
-void otPlatReset(otInstance *aInstance)
+void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    otSysDeinit();
-    platformUartRestore();
-
-    longjmp(gResetJump, 1);
-    assert(false);
-
-    (void)aInstance;
+    (void)aBuf;
+    (void)aBufLength;
 }
 
-otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
+void otPlatUartSendDone(void)
 {
-    (void)aInstance;
-    return sPlatResetReason;
-}
-
-void otPlatWakeHost(void)
-{
-    // TODO: implement an operation to wake the host from sleep state.
-}
-
-otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState)
-{
-    otError error = OT_ERROR_NONE;
-
-    (void)aInstance;
-
-    switch (aState)
-    {
-    case OT_PLAT_MCU_POWER_STATE_ON:
-    case OT_PLAT_MCU_POWER_STATE_LOW_POWER:
-        gPlatMcuPowerState = aState;
-        break;
-
-    default:
-        error = OT_ERROR_FAILED;
-        break;
-    }
-
-    return error;
-}
-
-otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
-{
-    (void)aInstance;
-    return gPlatMcuPowerState;
 }

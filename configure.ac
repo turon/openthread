@@ -159,27 +159,6 @@ AC_SUBST(OPENTHREAD_TARGET_DEFINES)
 # Checks for build host programs
 #
 
-# This is a hack to restore some old broken behavior that was
-# removed in pull request #1527. It's use is highly discouraged,
-# you should try to fix your build environment instead.
-AC_ARG_ENABLE(no-executables-hack,
-    [AS_HELP_STRING([--enable-no-executables-hack],
-        [Enable hack that prevents link checks at configure time. Highly discouraged.])])
-AC_MSG_CHECKING([whether to disable executable checking])
-if test "${enable_no_executables_hack}" = "yes"
-then
-    AC_MSG_RESULT([yes])
-    AC_NO_EXECUTABLES
-    # Here we guess conservative values for tests that require link checks
-    # to test for these features. This will prevent these checks from
-    # being performed later in the configuration process.
-    ac_cv_func_strlcat=${ac_cv_func_strlcat-no}
-    ac_cv_func_strlcpy=${ac_cv_func_strlcpy-no}
-    ac_cv_func_strnlen=${ac_cv_func_strnlen-no}
-else
-    AC_MSG_RESULT([no])
-fi
-
 # Passing -Werror to GCC-based or -compatible compilers breaks some
 # autoconf tests (see
 # http://lists.gnu.org/archive/html/autoconf-patches/2008-09/msg00014.html).
@@ -232,7 +211,7 @@ AC_PATH_PROG(CMP, cmp)
 #   -Wall                        CC, CXX
 #
 
-PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Werror -std=c99 -pedantic-errors"
+PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Werror -std=c11 -pedantic-errors"
 PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -std=gnu++98 -Wno-c++14-compat -fno-exceptions"
 
 AC_CACHE_CHECK([whether $CC is Clang],
@@ -906,6 +885,116 @@ AC_MSG_RESULT(${enable_dtls})
 AC_SUBST(OPENTHREAD_ENABLE_DTLS)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_DTLS], [test "${enable_dtls}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DTLS],[${OPENTHREAD_ENABLE_DTLS}],[Define to 1 to enable dtls support.])
+
+#
+# BLE platform support
+#
+
+AC_MSG_CHECKING([whether to build with BLE support])
+AC_ARG_ENABLE(ble,
+    [AS_HELP_STRING([--enable-ble],[Enable BLE support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_ble=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_ble} for --enable-ble])
+            ;;
+        esac
+    ],
+    [enable_ble=no])
+
+if test "$enable_ble" = "yes"; then
+    OPENTHREAD_ENABLE_BLE=1
+else
+    OPENTHREAD_ENABLE_BLE=0
+fi
+
+AC_MSG_RESULT(${enable_ble})
+AC_SUBST(OPENTHREAD_ENABLE_BLE)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_BLE], [test "${enable_ble}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BLE],[${OPENTHREAD_ENABLE_BLE}],[Define to 1 to enable BLE support.])
+
+#
+# Virtual BLE simulator for testing
+#
+
+AC_MSG_CHECKING([whether to build with Bluetooth SIM support])
+AC_ARG_ENABLE(ble_sim,
+    [AS_HELP_STRING([--enable-ble-sim],[Enable Bluetooth SIM support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_ble_sim=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_ble_sim} for --enable_ble_sim])
+            ;;
+        esac
+    ],
+    [enable_ble_sim=no])
+
+if test "$enable_ble_sim" = "yes"; then
+    OPENTHREAD_ENABLE_BLE_SIM=1
+    # Provides btvirt for posix emulation testing.
+    ac_configure_args="$ac_configure_args --enable-testing --disable-systemd"
+    AC_CONFIG_SUBDIRS([third_party/bluez/repo])
+else
+    OPENTHREAD_ENABLE_BLE_SIM=0
+fi
+
+AC_MSG_RESULT(${enable_ble_sim})
+AC_SUBST(OPENTHREAD_ENABLE_BLE_SIM)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_BLE_SIM], [test "${enable_ble_sim}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BLE_SIM],[${OPENTHREAD_ENABLE_BLE_SIM}],[Define to 1 to enable BLE SIM support.])
+
+#
+# BLE Host Implementations
+#
+
+AC_MSG_CHECKING([which host stack to use with SIM])
+AC_ARG_WITH(ble_host,
+    [AS_HELP_STRING([--with-ble-host=TARGET],
+        [Specify the ble host stack from one of: none, nimble @<:@default=none@:>@.])],
+    [
+        case "${with_ble_host}" in
+
+        none|nimble)
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${with_ble_host} for --with-ble-host])
+            ;;
+        esac
+    ],
+    [with_ble_host=none])
+
+OPENTHREAD_BLE_HOST=${with_ble_host}
+
+case ${with_ble_host} in
+
+    nimble)
+        OPENTHREAD_BLE_HOST_NIMBLE=1
+	AC_DEFINE_UNQUOTED([OPENTHREAD_BLE_HOST_NIMBLE],[${OPENTHREAD_BLE_HOST_NIMBLE}],[Define to 1 if you want to use NimBLE host examples])
+        ;;
+
+esac
+
+
+AC_MSG_RESULT(${OPENTHREAD_BLE_HOST})
+
+AC_SUBST(OPENTHREAD_BLE_HOST)
+AM_CONDITIONAL([OPENTHREAD_BLE_HOST], [test "${with_ble_host}" != "none"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_BLE_HOST],[${OPENTHREAD_BLE_HOST}],[OpenThread ble_host])
+
+AC_SUBST(OPENTHREAD_BLE_HOST_NIMBLE)
+AM_CONDITIONAL([OPENTHREAD_BLE_HOST_NIMBLE], [test "${OPENTHREAD_BLE_HOST}" = "nimble"])
+
 
 #
 # Jam Detection
@@ -1800,8 +1889,11 @@ src/posix/Makefile
 src/posix/platform/Makefile
 third_party/Makefile
 third_party/mbedtls/Makefile
+third_party/mynewt-nimble/Makefile
 examples/Makefile
 examples/apps/Makefile
+examples/apps/ble/Makefile
+examples/apps/ble/hci/Makefile
 examples/apps/cli/Makefile
 examples/apps/ncp/Makefile
 examples/platforms/Makefile
@@ -1825,6 +1917,7 @@ tools/spi-hdlc-adapter/Makefile
 tests/Makefile
 tests/fuzz/Makefile
 tests/scripts/Makefile
+tests/scripts/ble/Makefile
 tests/scripts/thread-cert/Makefile
 tests/unit/Makefile
 doc/Makefile
@@ -1897,6 +1990,9 @@ AC_MSG_NOTICE([
   OpenThread NCP Vendor Hook Source         : ${with_ncp_vendor_hook_source}
   OpenThread NCP Spinel Encrypter           : ${with_ncp_spinel_encrypter_libs}
   OpenThread Vendor Extension Source        : ${with_vendor_extension}
+  OpenThread BLE Host Configuration         : ${with_ble_host}
+  Openthread BLE support                    : ${enable_ble}
+  Openthread BLE SIM support                : ${enable_ble_sim}
   OpenThread Multiple Instances support     : ${enable_multiple_instances}
   OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}

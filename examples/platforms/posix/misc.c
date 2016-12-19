@@ -38,7 +38,7 @@
 #include "openthread-system.h"
 
 #ifndef _WIN32
-extern jmp_buf gResetJump;
+jmp_buf gResetJump;
 #endif
 
 static otPlatResetReason   sPlatResetReason = OT_PLAT_RESET_REASON_POWER_ON;
