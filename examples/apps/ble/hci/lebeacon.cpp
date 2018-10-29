@@ -44,6 +44,8 @@
 #include <openthread/platform/ble.h>
 #include <openthread/platform/ble_hci.h>
 
+#include "openthread-system.h"
+
 #define DEFAULT_ADV_INTERVAL 500
 
 static otInstance *sInstance;
@@ -118,6 +120,8 @@ void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionId)
 
 int main(int argc, char *argv[])
 {
+    otSysInit(argc, argv);
+
     sInstance = otInstanceInitSingle();
     assert(sInstance);
 

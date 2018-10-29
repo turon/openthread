@@ -44,9 +44,14 @@
 #include <openthread/platform/ble.h>
 #include <openthread/platform/ble_hci.h>
 
+#include "openthread-system.h"
+
 int main(int argc, char *argv[])
 {
     otInstance *sInstance;
+
+    otSysInit(argc, argv);
+
     sInstance = otInstanceInitSingle();
     assert(sInstance);
 
