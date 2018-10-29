@@ -558,8 +558,8 @@ otError otPlatBleGapConnect(otInstance *         aInstance,
 
     mapOtToNimbleAddress(aAddress, &peerAddr);
 
-    rc = ble_gap_connect(aAddress->mAddrType, &peerAddr, DEFAULT_CONN_DISC_INTERVAL,
-                         &connParams, gap_event_cb, aInstance);
+    rc = ble_gap_connect(aAddress->mAddrType, &peerAddr, DEFAULT_CONN_DISC_INTERVAL, &connParams, gap_event_cb,
+                         aInstance);
 
     return mapNimbleToOtError(rc);
 }
@@ -972,15 +972,13 @@ static int on_l2cap_event(struct ble_l2cap_event *event, void *arg)
     {
     case BLE_L2CAP_EVENT_COC_CONNECTED:
         sNimbleL2capChannel = event->connect.chan;
-        dispatch_otPlatBleL2capOnConnectionRequest(instance, event->connect.chan->psm,
-                                                   event->connect.chan->my_mtu,
+        dispatch_otPlatBleL2capOnConnectionRequest(instance, event->connect.chan->psm, event->connect.chan->my_mtu,
                                                    event->connect.chan->scid);
         break;
 
     case BLE_L2CAP_EVENT_COC_DISCONNECTED:
         sNimbleL2capChannel = NULL;
-        dispatch_otPlatBleL2capOnDisconnect(instance, event->disconnect.chan->scid, 
-                                            event->disconnect.chan->dcid);
+        dispatch_otPlatBleL2capOnDisconnect(instance, event->disconnect.chan->scid, event->disconnect.chan->dcid);
         break;
 
     case BLE_L2CAP_EVENT_COC_ACCEPT:

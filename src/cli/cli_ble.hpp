@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file contains definitions for a simple CLI CoAP server and client.
+ *   This file contains definitions for a simple CLI Bluetooth LE command set.
  */
 
 #ifndef CLI_BLE_HPP_
@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/udp.h>
+#include <openthread/cli.h>
 #include <openthread/error.h>
 
 #include "cli/cli_server.hpp"
@@ -47,7 +47,7 @@ namespace Cli {
 class Interpreter;
 
 /**
- * This class implements a CLI-based UDP example.
+ * This class implements a CLI-based BLE example.
  *
  */
 class Ble
@@ -70,9 +70,9 @@ public:
      *
      */
     otError Process(otInstance *aInstance, int argc, char *argv[],
-		    Server &aServer);
+                    Server &aServer);
 
-    static Server       *sServer;
+    static Server *sServer;
   
 private:
     struct Command

@@ -32,8 +32,14 @@ git submodule update --init --remote
 To build OpenThread with NimBLE as the host stack, use the following configure command:
 
 ```./bootstrap
-./configure --with-examples=posix --enable-cli-app --enable-ble --with-ble-host=nimble
+./configure --with-examples=posix  --enable-ftd --enable-cli --enable-ble --with-ble-host=nimble
 make
+```
+
+or
+
+```./bootstrap
+BLE=1 BLE_HOST=nimble make -f examples/Makefile-posix
 ```
 
 ## Applications ##

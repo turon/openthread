@@ -63,14 +63,14 @@ PLATFORM_SOURCES                         += \
     ble_stub.cpp                            \
     $(NULL)
 
-libopenthread_posix_a_CPPFLAGS           +=  \
-    -I$(top_srcdir)/third_party/mynewt-nimble/repo/porting/npl/linux/include \
-    -I$(top_srcdir)/third_party/mynewt-nimble/repo/porting/npl/linux/src     \
-    -I$(top_srcdir)/third_party/mynewt-nimble/repo/porting/examples/linux/include \
-    -I$(top_srcdir)/third_party/mynewt-nimble/repo/porting/nimble/include    \
-    -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/include            \
-    -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/host/include       \
-    -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/host/src           \
+libopenthread_posix_a_CPPFLAGS           +=                                             \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/porting/npl/linux/include            \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/porting/npl/linux/src                \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/porting/examples/linux/include       \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/porting/nimble/include               \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/include                       \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/host/include                  \
+    -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/host/src                      \
     -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/host/services/ans/include     \
     -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/host/services/gap/include     \
     -I$(top_srcdir)/third_party/mynewt-nimble/repo/nimble/host/services/gatt/include    \

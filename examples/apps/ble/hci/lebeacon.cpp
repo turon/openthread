@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -48,24 +48,24 @@
 
 static otInstance *sInstance;
 
-static uint8_t sAdv[] = {0x02, 0x01, 0x06, 0x16, 0x16, 0xf5, 0xfe, ///< UUID
-                         0x00,                                     ///< Type
-                         0x01,                                     ///< Count
-                         0xc5,                                     ///< TX Power
-                         0xDE, 0xAD, 0xBE, 0xEF, 0xFA, 0xCE, 0xBA, 0xBE,
-                         0xDA, 0xDA, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
+static const uint8_t sAdv[] = {0x02, 0x01, 0x06, 0x16, 0x16, 0xf5, 0xfe, ///< UUID
+			       0x00,                                     ///< Type
+			       0x01,                                     ///< Count
+			       0xc5,                                     ///< TX Power
+			       0xDE, 0xAD, 0xBE, 0xEF, 0xFA, 0xCE, 0xBA, 0xBE,
+			       0xDA, 0xDA, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
 
-static uint8_t sScanResp[] = {11,   //  length
-                              0x09, //  type: COMPLETE_LOCAL_NAME
-                              'o',  'p', 'e', 'n', 't', 'h', 'r', 'e', 'a', 'd'};
+static const uint8_t sScanResp[] = {11,   //  length
+				    0x09, //  type: COMPLETE_LOCAL_NAME
+				    'o',  'p', 'e', 'n', 't', 'h', 'r', 'e', 'a', 'd'};
 
-void print_bytes(uint8_t *b, int len, char *name)
+void print_bytes(const uint8_t *aBytes, int aLength, const char *aName)
 {
-    printf("%s = 0x", name);
+    printf("%s = 0x", aName);
 
-    for (int i = 0; i < len; i++)
+    for (int i = 0; i < aLength; i++)
     {
-        printf("%02x", b[i]);
+        printf("%02x", aBytes[i]);
     }
 
     printf("\n");
@@ -75,21 +75,28 @@ void enable_advertising()
 {
     otError err;
 
-    print_bytes(sAdv, sizeof(sAdv), (char *)"sAdv");
+    print_bytes(sAdv, sizeof(sAdv), "sAdv");
 
     err = otPlatBleGapScanResponseSet(sInstance, sScanResp, sizeof(sScanResp));
     if (err)
+    {
         printf("Error: (%2d) in otPlatBleGapScanResponseSet\n", err);
+    }
     err = otPlatBleGapServiceSet(sInstance, "openthread", 0);
     if (err)
+    {
         printf("Error: (%2d) in otPlatBleGapServiceSet\n", err);
+    }
     err = otPlatBleGapAdvDataSet(sInstance, sAdv, sizeof(sAdv));
     if (err)
+    {
         printf("Error: (%2d) in otPlatBleGapAdvDataSet\n", err);
+    }
     err = otPlatBleGapAdvStart(sInstance, DEFAULT_ADV_INTERVAL, OT_BLE_ADV_MODE_CONNECTABLE);
     if (err)
+    {
         printf("Error: (%2d) in otPlatBleGapAdvStart\n", err);
-
+    }
     printf("Advertising...\n");
 }
 

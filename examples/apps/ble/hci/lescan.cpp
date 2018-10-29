@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -86,17 +86,17 @@ int main(int argc, char *argv[])
     }
 }
 
-void print_bytes(uint8_t *b, int len)
+void print_bytes(uint8_t *aBytes, int aLength)
 {
-    for (int i = 0; i < len; i++)
+    for (int i = 0; i < aLength; i++)
     {
-        printf("%02x", b[i]);
+        printf("%02x", aBytes[i]);
     }
 }
 
-extern "C" void otPlatBleGapOnAdvReceived(otInstance *         aInstance,
+extern "C" void otPlatBleGapOnAdvReceived(otInstance          *aInstance,
                                           otPlatBleDeviceAddr *aAddress,
-                                          otBleRadioPacket *   aPacket)
+                                          otBleRadioPacket    *aPacket)
 {
     (void)aInstance;
     (void)aPacket;

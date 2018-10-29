@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -33,11 +33,6 @@
  *   This file implements SoC runtime callbacks that aren't needed by the
  * ble command line tests.
  */
-
-void otTaskletsSignalPending(otInstance *aInstance)
-{
-    (void)aInstance;
-}
 
 void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
