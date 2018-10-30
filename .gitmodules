@@ -4,5 +4,5 @@
 	branch = pr/mainloop-hooks
 [submodule "third_party/mynewt-nimble/repo"]
 	path = third_party/mynewt-nimble/repo
-	url = git@github.com:turon/mynewt-nimble.git
+	url = https://github.com:turon/mynewt-nimble.git
 	branch = pr/linux/npl-cleanup
