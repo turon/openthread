@@ -97,6 +97,7 @@ libopenthread_posix_a_SOURCES             = \
 
 noinst_HEADERS                            = \
     platform-posix.h                        \
+    platform-config.h                       \
     $(NULL)
 
 PRETTY_FILES                              = \
