@@ -109,7 +109,7 @@ class Node:
             srcdir += "/../../.."
 
         # btvirt = "%s/third_party/bluez/repo/emulator/btvirt -l%d -L" % (srcdir, count+1)
-        btvirt = "btvirt -l%d -L" % (count+1)
+        btvirt = "/usr/local/bin/btvirt -l%d -L" % (count+1)
 
         print "SETUP: %s" % (btvirt)
 
