@@ -108,7 +108,8 @@ class Node:
             srcdir = os.path.dirname(os.path.realpath(__file__))
             srcdir += "/../../.."
 
-        btvirt = "%s/third_party/bluez/repo/emulator/btvirt -l%d -L" % (srcdir, count+1)
+        # btvirt = "%s/third_party/bluez/repo/emulator/btvirt -l%d -L" % (srcdir, count+1)
+        btvirt = "btvirt -l%d -L" % (srcdir, count+1)
 
         print "SETUP: %s" % (btvirt)
 
