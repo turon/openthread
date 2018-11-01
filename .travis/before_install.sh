@@ -155,10 +155,9 @@ cd /tmp || die
 	sudo cp ./emulator/btvirt /usr/local/bin
     }
 
-    [ $BUILD_TARGET != posix -o $CC != clang ] || {
+    [ $BUILD_TARGET != posix -o "$CC" != clang ] || {
         sudo apt-get install clang || die
     }
-    
 
     [ $BUILD_TARGET != toranj-test-framework ] || {
         # packages for wpantund
