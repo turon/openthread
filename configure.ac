@@ -159,27 +159,6 @@ AC_SUBST(OPENTHREAD_TARGET_DEFINES)
 # Checks for build host programs
 #
 
-# This is a hack to restore some old broken behavior that was
-# removed in pull request #1527. It's use is highly discouraged,
-# you should try to fix your build environment instead.
-AC_ARG_ENABLE(no-executables-hack,
-    [AS_HELP_STRING([--enable-no-executables-hack],
-        [Enable hack that prevents link checks at configure time. Highly discouraged.])])
-AC_MSG_CHECKING([whether to disable executable checking])
-if test "${enable_no_executables_hack}" = "yes"
-then
-    AC_MSG_RESULT([yes])
-    AC_NO_EXECUTABLES
-    # Here we guess conservative values for tests that require link checks
-    # to test for these features. This will prevent these checks from
-    # being performed later in the configuration process.
-    ac_cv_func_strlcat=${ac_cv_func_strlcat-no}
-    ac_cv_func_strlcpy=${ac_cv_func_strlcpy-no}
-    ac_cv_func_strnlen=${ac_cv_func_strnlen-no}
-else
-    AC_MSG_RESULT([no])
-fi
-
 # Passing -Werror to GCC-based or -compatible compilers breaks some
 # autoconf tests (see
 # http://lists.gnu.org/archive/html/autoconf-patches/2008-09/msg00014.html).
