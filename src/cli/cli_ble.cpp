@@ -51,8 +51,6 @@
 
 #include "cli/cli.hpp"
 
-#if OPENTHREAD_ENABLE_BLE && !OPENTHREAD_BTP_OT
-
 /// Default interval of 100ms.
 #define DEFAULT_ADV_INTERVAL 160
 
@@ -627,5 +625,3 @@ void otPlatBleL2capOnSduSent(otInstance *aInstance)
 #ifdef __cplusplus
 }
 #endif
-
-#endif // OPENTHREAD_ENABLE_BLE && !OPENTHREAD_BTP_OT

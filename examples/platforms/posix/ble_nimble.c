@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "platform-config.h"
+
 #include <common/logging.hpp>
 #include <openthread/platform/ble.h>
 #include <openthread/platform/ble_hci.h>
@@ -47,10 +49,6 @@
 #define DEFAULT_CONN_DISC_INTERVAL 1000
 #define DEFAULT_ADDR_TYPE BLE_OWN_ADDR_RANDOM
 
-#define BLE_MAX_NUM_SERVICES 2
-#define BLE_MAX_NUM_CHARACTERISTICS 5
-#define BLE_MAX_NUM_UUIDS (BLE_MAX_NUM_SERVICES + BLE_MAX_NUM_CHARACTERISTICS)
-
 bool     sNimbleInitialized = false;
 bool     sNimbleRunning     = false;
 uint16_t sNimbleConnHandle;
@@ -60,9 +58,9 @@ static struct ble_npl_task sTaskBleController;
 static struct ble_npl_sem  sTaskBleSyncSem;
 
 // Note: static allocation of GATT database. Tune accordingly.
-ble_uuid_any_t          sNimbleUuids[BLE_MAX_NUM_UUIDS];
-struct ble_gatt_svc_def sNimbleServices[BLE_MAX_NUM_SERVICES];
-struct ble_gatt_chr_def sNimbleCharacteristics[BLE_MAX_NUM_CHARACTERISTICS];
+ble_uuid_any_t          sNimbleUuids[OT_BLE_MAX_NUM_UUIDS];
+struct ble_gatt_svc_def sNimbleServices[OT_BLE_MAX_NUM_SERVICES];
+struct ble_gatt_chr_def sNimbleCharacteristics[OT_BLE_MAX_NUM_CHARACTERISTICS];
 
 int sNimbleUuidsCount           = 0;
 int sNimbleServicesCount        = 0;
@@ -577,15 +575,6 @@ otError otPlatBleGapDisconnect(otInstance *aInstance)
 //                        GATT COMMON
 //=============================================================================
 
-/**
- * Registers vendor specific UUID Base.
- *
- * @param[in]  aInstance  The OpenThread instance structure.
- * @param[in]  aUUID      A pointer to vendor specific 128-bit UUID Base.
- *
- */
-// otError otPlatBleGattVendorUuidRegister(otInstance *aInstance, const otPlatBleUuid *aUuid);
-
 otError otPlatBleGattMtuGet(otInstance *aInstance, uint16_t *aMtu)
 {
     (void)aInstance;
@@ -625,7 +614,6 @@ static int gatt_event_cb(uint16_t conn_handle, uint16_t attr_handle, struct ble_
 
     case BLE_GATT_ACCESS_OP_WRITE_DSC:
     {
-        // dispatch_otPlatBleGattServerOnSubscribeRequest(otInstance *aInstance, uint16_t aHandle, bool aSubscribing);
         break;
     }
     }
@@ -673,7 +661,6 @@ static otError bleGattServerCharacteristicRegister(otInstance *                 
 
     chr           = &sNimbleCharacteristics[sNimbleCharacteristicsCount];
     *(void **)chr = NULL;
-    // chr->uuid = 0;
 
     // Nimble only supports one-time registration of entire GATT database.
     return OT_ERROR_NOT_IMPLEMENTED;
@@ -688,7 +675,7 @@ static otError bleGattServerServiceRegister(otInstance *aInstance, const otPlatB
     ble_uuid_any_t *         uuid = &sNimbleUuids[sNimbleUuidsCount];
     struct ble_gatt_svc_def *svc  = &sNimbleServices[sNimbleServicesCount];
 
-    // if (sNimbleServicesCount > BLE_MAX_NUM_SERVICES) return
+    // if (sNimbleServicesCount > OT_BLE_MAX_NUM_SERVICES) return
 
     svc->type = BLE_GATT_SVC_TYPE_PRIMARY;
     svc->uuid = &uuid->u;
@@ -759,7 +746,6 @@ static int on_gattc_read(uint16_t                     conn_handle,
 
     packet.mValue  = OS_MBUF_DATA(attr->om, uint8_t *);
     packet.mLength = OS_MBUF_PKTLEN(attr->om);
-    // packet.mPower = ;
 
     dispatch_otPlatBleGattClientOnReadResponse(instance, &packet);
 
@@ -810,20 +796,6 @@ otError otPlatBleGattClientSubscribeRequest(otInstance *aInstance, uint16_t aHan
     packet.mLength = sizeof(kGattSubscribeReqValue);
     return otPlatBleGattClientWrite(aInstance, aHandle, &packet);
 }
-
-/**
- * The BLE driver calls this method to notify OpenThread that subscribe response
- * has been received.
- *
- * This method is called only if @p otPlatBleGattClienSubscribe was previously requested.
- *
- * @note This function shall be used only for GATT Client.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- * @param[in] aHandle    The handle on which ATT Write Response has been sent.
- *
- */
-// extern void dispatch_otPlatBleGattClientOnSubscribeResponse(otInstance *aInstance, uint16_t aHandle);
 
 static int on_gatt_disc_s(uint16_t                     conn_handle,
                           const struct ble_gatt_error *error,
@@ -984,8 +956,7 @@ static int on_l2cap_event(struct ble_l2cap_event *event, void *arg)
     case BLE_L2CAP_EVENT_COC_ACCEPT:
     {
         otPlatBleL2capConnetionResult result;
-        dispatch_otPlatBleL2capOnConnectionResponse(instance, result,
-                                                    event->accept.chan->peer_mtu, // event->accept.peer_sdu_size
+        dispatch_otPlatBleL2capOnConnectionResponse(instance, result, event->accept.chan->peer_mtu,
                                                     event->accept.chan->dcid);
         break;
     }

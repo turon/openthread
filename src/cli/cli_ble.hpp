@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file contains definitions for a simple CLI Bluetooth LE command set.
+ *   This file defines a simple CLI Bluetooth LE command set.
  */
 
 #ifndef CLI_BLE_HPP_
@@ -47,7 +47,7 @@ namespace Cli {
 class Interpreter;
 
 /**
- * This class implements a CLI-based BLE example.
+ * This class implements a CLI-based Bluetooth LE example.
  *
  */
 class Ble
@@ -73,7 +73,7 @@ public:
                     Server &aServer);
 
     static Server *sServer;
-  
+
 private:
     struct Command
     {
