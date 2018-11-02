@@ -147,10 +147,10 @@ cd /tmp || die
         sudo pip install pexpect || die
 
         # Install btvirt for simulation testing
-        wget http://www.kernel.org/pub/linux/bluetooth/bluez-5.43.tar.gz
-        tar xfz bluez-5.43.tar.gz
-        cd bluez-5.43/
-        ./configure  --prefix=/usr/local --enable-testing --enable-deprecated --enable-experimental --enable-maintainer-mode --with-systemdsystemunitdir=/lib/systemd/system --with-systemduserunitdir=/usr/lib/systemd
+        wget http://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.gz
+        tar xfz bluez-5.44.tar.gz
+        cd bluez-5.44/
+        ./configure  --prefix=/usr/local --enable-testing --enable-deprecated --enable-experimental --disable-systemd
         make -j4
         sudo cp ./emulator/btvirt /usr/local/bin
     }

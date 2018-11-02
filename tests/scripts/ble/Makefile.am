@@ -69,8 +69,10 @@ TESTS                                                              = \
     $(NULL)
 
 XFAIL_TESTS                                                        = \
+    test_conn.py                                                     \
     test_gatt_read.py                                                \
     test_gatt_discover.py                                            \
+    test_l2cap.py                                                    \
     $(NULL)
 
 
