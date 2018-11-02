@@ -50,10 +50,6 @@ check_SCRIPTS =
 if OPENTHREAD_ENABLE_BLE
 check_SCRIPTS                                                     += \
     test_beacon.py                                                   \
-    test_conn.py                                                     \
-    test_gatt_read.py                                                \
-    test_gatt_discover.py                                            \
-    test_l2cap.py                                                    \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BLE
 
@@ -69,10 +65,6 @@ TESTS                                                              = \
     $(NULL)
 
 XFAIL_TESTS                                                        = \
-    test_conn.py                                                     \
-    test_gatt_read.py                                                \
-    test_gatt_discover.py                                            \
-    test_l2cap.py                                                    \
     $(NULL)
 
 
