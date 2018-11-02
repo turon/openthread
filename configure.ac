@@ -919,45 +919,10 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_BLE], [test "${enable_ble}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BLE],[${OPENTHREAD_ENABLE_BLE}],[Define to 1 to enable BLE support.])
 
 #
-# Virtual BLE simulator for testing
-#
-
-AC_MSG_CHECKING([whether to build with Bluetooth SIM support])
-AC_ARG_ENABLE(ble_sim,
-    [AS_HELP_STRING([--enable-ble-sim],[Enable Bluetooth SIM support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_ble_sim=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_ble_sim} for --enable_ble_sim])
-            ;;
-        esac
-    ],
-    [enable_ble_sim=no])
-
-if test "$enable_ble_sim" = "yes"; then
-    OPENTHREAD_ENABLE_BLE_SIM=1
-    # Provides btvirt for posix emulation testing.
-    ac_configure_args="$ac_configure_args --enable-testing --disable-systemd"
-    AC_CONFIG_SUBDIRS([third_party/bluez/repo])
-else
-    OPENTHREAD_ENABLE_BLE_SIM=0
-fi
-
-AC_MSG_RESULT(${enable_ble_sim})
-AC_SUBST(OPENTHREAD_ENABLE_BLE_SIM)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_BLE_SIM], [test "${enable_ble_sim}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BLE_SIM],[${OPENTHREAD_ENABLE_BLE_SIM}],[Define to 1 to enable BLE SIM support.])
-
-#
 # BLE Host Implementations
 #
 
-AC_MSG_CHECKING([which host stack to use with SIM])
+AC_MSG_CHECKING([which Bluetooth host stack to use])
 AC_ARG_WITH(ble_host,
     [AS_HELP_STRING([--with-ble-host=TARGET],
         [Specify the ble host stack from one of: none, nimble @<:@default=none@:>@.])],
@@ -1992,7 +1957,6 @@ AC_MSG_NOTICE([
   OpenThread Vendor Extension Source        : ${with_vendor_extension}
   OpenThread BLE Host Configuration         : ${with_ble_host}
   Openthread BLE support                    : ${enable_ble}
-  Openthread BLE SIM support                : ${enable_ble_sim}
   OpenThread Multiple Instances support     : ${enable_multiple_instances}
   OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
