@@ -528,7 +528,7 @@ python --version || die
 
 [ $BUILD_TARGET != posix-ble ] || {
     ./bootstrap || die
-    sudo COVERAGE=1 BLE=1 BLE_SIM=1 BLE_HOST=nimble BuildJobs=1 make -f examples/Makefile-posix check || die
+    sudo COVERAGE=1 BLE=1 BLE_HOST=nimble BuildJobs=1 make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != toranj-test-framework ] || {

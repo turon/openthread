@@ -65,14 +65,4 @@ SUBDIRS                                += \
     $(NULL)
 endif # OPENTHREAD_BLE_HOST_NIMBLE
 
-if OPENTHREAD_ENABLE_BLE_SIM
-DIST_SUBDIRS                           += \
-    bluez/repo                            \
-    $(NULL)
-
-SUBDIRS                                += \
-    bluez/repo                            \
-    $(NULL)
-endif # OPENTHREAD_ENABLE_BLE_SIM
-
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

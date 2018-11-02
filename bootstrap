@@ -36,24 +36,6 @@
 
 nlbuild_autotools_stem="third_party/nlbuild-autotools/repo"
 
-subdirs=`autoconf --trace=AC_CONFIG_SUBDIRS:$% configure.ac`
-
-# Bootstrap the child directories mentioned in AC_CONFIG_SUBDIRS.
-# These bootstrap files must exist.
-for d in $subdirs
-do
-    if test -d "$d"; then
-        echo "Bootstrapping $d..."
-        if test -f $d/bootstrap; then
-            # good...
-            (cd $d; /bin/sh ./bootstrap)
-        else
-            echo "bootstrap: no file $d/bootstrap" >&2
-            exit 1
-        fi
-    fi
-done
-
 # Establish some key directories
 
 srcdir=`dirname ${0}`
