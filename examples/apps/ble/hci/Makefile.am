@@ -46,7 +46,6 @@ LDADD_COMMON                                                          += \
     $(NULL)
 
 SOURCES_COMMON                                                        += \
-    stub_runtime.c                                                       \
     $(NULL)
 
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS

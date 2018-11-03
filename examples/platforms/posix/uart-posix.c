@@ -334,3 +334,17 @@ int otPlatDebugUart_getc(void)
 }
 
 #endif
+
+/**
+ * The UART driver weak functions definition.
+ *
+ */
+OT_TOOL_WEAK void otPlatUartSendDone(void)
+{
+}
+
+OT_TOOL_WEAK void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    (void)aBuf;
+    (void)aBufLength;
+}
