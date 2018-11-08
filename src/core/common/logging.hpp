@@ -100,7 +100,7 @@ extern "C" {
 #define _OT_REGION_CLI_PREFIX "-CLI-----: "
 #define _OT_REGION_CORE_PREFIX "-CORE----: "
 #define _OT_REGION_UTIL_PREFIX "-UTIL----: "
-#define _OT_REGION_BLE_PREFIX "-BLE----: "
+#define _OT_REGION_BLE_PREFIX "-BLE-----: "
 #else
 #define _OT_REGION_API_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLE_PREFIX _OT_REGION_SUFFIX

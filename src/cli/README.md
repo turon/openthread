@@ -28,7 +28,6 @@ OpenThread test scripts use the CLI to execute test cases.
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
 * [factoryreset](#factoryreset)
-* [gatt](#gatt)
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
 * [ipmaddr](#ipmaddr)
@@ -214,6 +213,64 @@ Get Bluetooth Device Address.
 ```bash
 > ble bdaddr
 23000001aa00
+Done
+```
+
+### ble gatt read \<handle\>
+
+Read BLE Attribute at given handle.
+
+* handle: Offset into attribute database of field to read
+
+```bash
+> ble gatt read 3
+546f424c4500
+Done
+```
+
+### ble gatt write \<handle\> \<data\>
+
+Write given data to BLE Attribute at given handle.
+
+* handle: Offset into attribute database of field to write
+* data:   Data to write to field in hexidecimal format.
+
+```bash
+> ble gatt write 10 01020304
+Done
+```
+
+### ble gatt discover services
+
+Discover GATT services on remote node.
+
+```bash
+> ble gatt disc services
+service uuid=0x1800 start=1 end=6
+service uuid=0x1801 start=7 end=7
+service uuid=0xfeaf start=8 end=13
+Done
+```
+
+### ble gatt subscribe \<handle\>
+
+Subscribe to indications of GATT Attribute updates.
+
+* handle: Offset into attribute database of field to subscribe to
+
+```bash
+> ble gatt subscribe 3
+Done
+```
+
+### ble gatt unsubscribe \<handle\>
+
+Unsubscribe to indications of GATT Attribute updates.
+
+* handle: Offset into attribute database of field to unsubscribe to
+
+```bash
+> ble gatt unsubscribe 3
 Done
 ```
 
@@ -1004,64 +1061,6 @@ Delete all stored settings, and signal a platform reset.
 
 ```bash
 > factoryreset
-```
-
-### gatt read \<handle\>
-
-Read BLE Attribute at given handle.
-
-* handle: Offset into attribute database of field to read
-
-```bash
-> gatt read 3
-546f424c4500
-Done
-```
-
-### gatt write \<handle\> \<data\>
-
-Write given data to BLE Attribute at given handle.
-
-* handle: Offset into attribute database of field to write
-* data:   Data to write to field in hexidecimal format.
-
-```bash
-> gatt write 10 01020304
-Done
-```
-
-### gatt discover services
-
-Discover GATT services on remote node.
-
-```bash
-> gatt disc services
-service uuid=0x1800 start=1 end=6
-service uuid=0x1801 start=7 end=7
-service uuid=0xfeaf start=8 end=13
-Done
-```
-
-### gatt subscribe \<handle\>
-
-Subscribe to indications of GATT Attribute updates.
-
-* handle: Offset into attribute database of field to subscribe to
-
-```bash
-> gatt subscribe 3
-Done
-```
-
-### gatt unsubscribe \<handle\>
-
-Unsubscribe to indications of GATT Attribute updates.
-
-* handle: Offset into attribute database of field to unsubscribe to
-
-```bash
-> gatt unsubscribe 3
-Done
 ```
 
 ### ifconfig
