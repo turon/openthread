@@ -39,9 +39,9 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     $(NULL)
 
-if OPENTHREAD_BLE_HOST_NIMBLE
+if OPENTHREAD_EXAMPLES_POSIX
 SUBDIRS                                += hci
-endif
+endif # OPENTHREAD_EXAMPLES_POSIX
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 

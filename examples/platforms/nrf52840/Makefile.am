@@ -31,6 +31,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 lib_LIBRARIES                                                                                              = \
     libopenthread-nrf52840.a                                                                                 \
     libopenthread-nrf52840-sdk.a                                                                             \
+    libopenthread-nrf52840-nimble.a                                                                          \
     libopenthread-nrf52840-softdevice-sdk.a                                                                  \
     $(NULL)
 
@@ -126,6 +127,25 @@ SOFTDEVICE_CPPFLAGS                                                             
     -DRAAL_SOFTDEVICE=1                                                                                      \
     $(NULL)
 
+RAAL_PHY_SOURCES_DIRECT                                                                                    = \
+    flash_nosd.c                                                                                             \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_notification_direct.c            \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_priority_drop_direct.c           \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_request_direct.c                 \
+    $(NULL)
+
+RAAL_PHY_SOURCES                                                                                           = \
+    flash_nosd.c                                                                                             \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_notification_swi.c               \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_priority_drop_swi.c              \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_request_swi.c                    \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_swi.c                            \
+    $(NULL)
+
+RAAL_PHY_CPPFLAGS                                                                                          = \
+    -DRAAL_NIMBLE=1                                                                                          \
+    $(NULL)
+
 PLATFORM_DIAG_SOURCES                                                                                      = \
     diag.c                                                                                                   \
     $(NULL)
@@ -139,6 +159,52 @@ PLATFORM_SOURCES                                                                
     $(PLATFORM_DIAG_SOURCES)                                                                                 \
     $(NULL)
 endif
+
+NIMBLE_CPPFLAGS =
+
+if OPENTHREAD_BLE_HOST_NIMBLE
+NIMBLE_ROOT               := $(top_srcdir)/third_party/mynewt-nimble/repo
+
+PLATFORM_SOURCES                         += \
+    ble_nimble.c                            \
+    ble_stub.cpp                            \
+    $(NULL)
+
+FREERTOS_ROOT             := $(top_srcdir)/third_party/freertos/repo/FreeRTOS
+
+NIMBLE_CPPFLAGS           +=  \
+    -I$(NIMBLE_ROOT)/porting/examples/freertos_nrf52/include  \
+    -I$(NIMBLE_ROOT)/porting/examples/freertos_nrf52/portable \
+    -I$(NIMBLE_ROOT)/porting/npl/freertos/include \
+    -I$(NIMBLE_ROOT)/porting/npl/freertos/src     \
+    -I$(NIMBLE_ROOT)/porting/nimble/include    \
+    -I$(NIMBLE_ROOT)/nimble/include            \
+    -I$(NIMBLE_ROOT)/nimble/host/include       \
+    -I$(NIMBLE_ROOT)/nimble/host/src           \
+    -I$(NIMBLE_ROOT)/nimble/host/services/ans/include     \
+    -I$(NIMBLE_ROOT)/nimble/host/services/gap/include     \
+    -I$(NIMBLE_ROOT)/nimble/host/services/gatt/include    \
+    -I$(FREERTOS_ROOT)/Source/include                     \
+    $(NULL)
+
+NIMBLE_CPPFLAGS           +=  \
+    -DNRF_802154_INTERNAL_RADIO_IRQ_HANDLING=0  \
+    -DNIMBLE_CFG_CONTROLLER \
+    $(NULL)
+
+# Do not enable -pedantic-errors
+override CFLAGS      := $(filter-out -pedantic-errors,$(CFLAGS))
+override CXXFLAGS    := $(filter-out -pedantic-errors,$(CXXFLAGS))
+
+# Do not enable warnings as errors
+override CFLAGS      := $(filter-out -Werror,$(CFLAGS))
+override CXXFLAGS    := $(filter-out -Werror,$(CXXFLAGS))
+
+# Do not enable strict C99 checks
+override CFLAGS      := $(filter-out -std=c99,$(CFLAGS))
+override CXXFLAGS    := $(filter-out -std=c99,$(CXXFLAGS))
+
+endif # OPENTHREAD_BLE_HOST_NIMBLE
 
 RADIO_DRIVER_SOURCES                                                                                         = \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154.c                                  \
@@ -200,6 +266,7 @@ HWCRYPTO_SOURCES                                                                
 libopenthread_nrf52840_a_CPPFLAGS                                                                          = \
     $(COMMONCPPFLAGS)                                                                                        \
     $(SINGLEPHY_CPPFLAGS)                                                                                    \
+    $(NIMBLE_CPPFLAGS)                                                                                       \
     $(NULL)
 
 libopenthread_nrf52840_a_SOURCES                                                                           = \
@@ -213,6 +280,7 @@ libopenthread_nrf52840_a_SOURCES                                                
 libopenthread_nrf52840_sdk_a_CPPFLAGS                                                                      = \
     $(COMMONCPPFLAGS)                                                                                        \
     $(SINGLEPHY_CPPFLAGS)                                                                                    \
+    $(NIMBLE_CPPFLAGS)                                                                                       \
     $(NULL)
 
 libopenthread_nrf52840_sdk_a_SOURCES                                                                       = \
@@ -225,6 +293,7 @@ libopenthread_nrf52840_sdk_a_SOURCES                                            
 libopenthread_nrf52840_softdevice_sdk_a_CPPFLAGS                                                           = \
     $(COMMONCPPFLAGS)                                                                                        \
     $(SOFTDEVICE_CPPFLAGS)                                                                                   \
+    $(NIMBLE_CPPFLAGS)                                                                                       \
     $(NULL)
 
 libopenthread_nrf52840_softdevice_sdk_a_SOURCES                                                            = \
@@ -232,6 +301,20 @@ libopenthread_nrf52840_softdevice_sdk_a_SOURCES                                 
     $(RADIO_DRIVER_SOURCES)                                                                                  \
     $(SOFTDEVICE_SOURCES)                                                                                    \
     $(HWCRYPTO_SOURCES)                                                                                      \
+    $(NULL)
+
+libopenthread_nrf52840_nimble_a_CPPFLAGS                                                                   = \
+    $(COMMONCPPFLAGS)                                                                                        \
+    $(RAAL_PHY_CPPFLAGS)                                                                                     \
+    $(NIMBLE_CPPFLAGS)                                                                                       \
+    $(NULL)
+
+libopenthread_nrf52840_nimble_a_SOURCES                                                                    = \
+    $(PLATFORM_SOURCES)                                                                                      \
+    $(RADIO_DRIVER_SOURCES)                                                                                  \
+    $(NORDICSEMI_SOURCES)                                                                                    \
+    $(HWCRYPTO_SOURCES)                                                                                      \
+    $(RAAL_PHY_SOURCES)                                                                                      \
     $(NULL)
 
 noinst_HEADERS                                                                                               = \

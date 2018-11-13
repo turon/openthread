@@ -1,4 +1,7 @@
 [submodule "third_party/mynewt-nimble/repo"]
 	path = third_party/mynewt-nimble/repo
 	url = https://github.com/turon/mynewt-nimble.git
-	branch = ble-plat/nimble
+	branch = nimble/raal
+[submodule "third_party/freertos/repo"]
+	path = third_party/freertos/repo
+	url = https://github.com/cjlano/freertos

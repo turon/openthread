@@ -108,11 +108,7 @@ pseudo_reset:
     otDiagInit(instance);
 #endif
 
-    while (!otSysPseudoResetWasRequested())
-    {
-        otTaskletsProcess(instance);
-        otSysProcessDrivers(instance);
-    }
+    otSysProcessRun(instance);
 
     otInstanceFinalize(instance);
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES

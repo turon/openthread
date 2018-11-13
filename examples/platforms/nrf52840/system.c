@@ -44,6 +44,15 @@
 #include <nrf.h>
 
 #include <openthread/config.h>
+#include <openthread/tasklet.h>
+
+#if OPENTHREAD_BLE_HOST_NIMBLE
+#include <nimble/nimble_npl.h>
+#include <nimble/nimble_port.h>
+#endif // OPENTHREAD_BLE_HOST_NIMBLE
+
+
+#define OT_TASK_STACK_SIZE       (2*1024)
 
 extern bool gPlatformPseudoResetWasRequested;
 
@@ -135,6 +144,32 @@ void otSysProcessDrivers(otInstance *aInstance)
     nrf5SpiSlaveProcess();
 #endif
     nrf5AlarmProcess(aInstance);
+}
+
+void otSysProcessRunTask(otInstance *aInstance)
+{
+    while (!otSysPseudoResetWasRequested())
+    {
+        otTaskletsProcess(aInstance);
+        otSysProcessDrivers(aInstance);
+    }    
+}
+
+void otSysProcessRun(otInstance *aInstance)
+{
+#if OPENTHREAD_BLE_HOST_NIMBLE
+    int rc;
+    static TaskHandle_t sOtTaskHandle;
+
+    rc = hal_timer_init(5, NULL);
+
+    xTaskCreate(otSysProcessRunTask, "ot", OT_TASK_STACK_SIZE,
+                aInstance, tskIDLE_PRIORITY + 1, &sOtTaskHandle);
+
+    vTaskStartScheduler();
+#else
+    otSysProcessRunTask(aInstance);
+#endif
 }
 
 __WEAK void otSysEventSignalPending(void)

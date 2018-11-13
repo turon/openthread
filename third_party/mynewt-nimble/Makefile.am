@@ -17,6 +17,10 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 NIMBLE_ROOT               := $(top_srcdir)/third_party/mynewt-nimble/repo
+FREERTOS_ROOT             := $(top_srcdir)/third_party/freertos/repo/FreeRTOS
+NRFX_ROOT                 := $(top_srcdir)/third_party/NordicSemiconductor/nrfx
+NORDIC_ROOT               := $(top_srcdir)/third_party/NordicSemiconductor
+OPENTHREAD_ROOT           := $(top_srcdir)
 
 EXTRA_DIST                 = $(NULL)
 
@@ -110,10 +114,6 @@ NIMBLE_SRC += \
     repo/ext/tinycrypt/src/utils.c \
     $(NULL)
 
-libnimble_a_SOURCES                           = \
-    $(NIMBLE_SRC)                               \
-    $(NULL)
-
 libnimble_a_CPPFLAGS                          = \
     -I$(NIMBLE_ROOT)/nimble/include                       \
     -I$(NIMBLE_ROOT)/nimble/host/include                  \
@@ -132,7 +132,7 @@ libnimble_a_CPPFLAGS                          = \
 
 # Source files for NPL OSAL
 if OPENTHREAD_EXAMPLES_POSIX
-libnimble_a_SOURCES                          += \
+NIMBLE_SRC                                   += \
     repo/porting/npl/linux/src/os_atomic.c      \
     repo/porting/npl/linux/src/os_callout.c     \
     repo/porting/npl/linux/src/os_eventq.cc     \
@@ -154,6 +154,83 @@ libnimble_a_CPPFLAGS                         += \
     -I$(NIMBLE_ROOT)/nimble/transport/socket/include      \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_POSIX
+
+if OPENTHREAD_EXAMPLES_NRF52840
+
+NIMBLE_SRC += \
+    repo/nimble/transport/ram/src/ble_hci_ram.c \
+    repo/nimble/controller/src/ble_ll_sched.c \
+    repo/nimble/controller/src/ble_ll_xcvr.c \
+    repo/nimble/controller/src/ble_ll_whitelist.c \
+    repo/nimble/controller/src/ble_ll_ctrl.c \
+    repo/nimble/controller/src/ble_ll_hci.c \
+    repo/nimble/controller/src/ble_ll_supp_cmd.c \
+    repo/nimble/controller/src/ble_ll_adv.c \
+    repo/nimble/controller/src/ble_ll_conn.c \
+    repo/nimble/controller/src/ble_ll_resolv.c \
+    repo/nimble/controller/src/ble_ll_conn_hci.c \
+    repo/nimble/controller/src/ble_ll.c \
+    repo/nimble/controller/src/ble_ll_scan.c \
+    repo/nimble/controller/src/ble_ll_dtm.c \
+    repo/nimble/controller/src/ble_ll_hci_ev.c \
+    repo/nimble/controller/src/ble_ll_nrf_raal.c \
+    repo/nimble/drivers/nrf52/src/ble_hw.c \
+    repo/nimble/drivers/nrf52/src/ble_phy.c \
+    repo/porting/nimble/src/os_cputime.c \
+    repo/porting/nimble/src/os_cputime_pwr2.c \
+    $(NULL)
+
+# FREERTOS specific
+NIMBLE_SRC += \
+    repo/porting/npl/freertos/src/nimble_port_freertos.c  \
+    repo/porting/npl/freertos/src/npl_os_freertos.c       \
+    $(NULL)
+
+# NRF52 specific
+NIMBLE_SRC += \
+    repo/porting/nimble/src/hal_timer.c \
+    repo/porting/examples/freertos_nrf52/nrf_irq.c \
+    repo/porting/examples/freertos_nrf52/portable/port.c \
+    repo/porting/examples/freertos_nrf52/portable/port_cmsis.c \
+    repo/porting/examples/freertos_nrf52/portable/port_cmsis_systick.c \
+    repo/porting/examples/freertos_nrf52/portable/ble_ll_rand_ot.c \
+    $(NULL)
+
+NIMBLE_CFLAGS = \
+    -DNRF52840_XXAA \
+    -DFREERTOS \
+    -DCONFIG_GPIO_AS_PINRESET  \
+    -DNIMBLE_CFG_CONTROLLER=1  \
+    $(NULL)
+
+
+libnimble_a_CPPFLAGS                                       += \
+    $(NIMBLE_CFLAGS)                                          \
+    -I$(NIMBLE_ROOT)/porting/examples/freertos_nrf52/include  \
+    -I$(NIMBLE_ROOT)/porting/examples/freertos_nrf52/portable \
+    -I$(NIMBLE_ROOT)/porting/npl/freertos/include             \
+    -I$(NIMBLE_ROOT)/porting/npl/freertos/src                 \
+    -I$(NIMBLE_ROOT)/porting/nimble/include                   \
+    -I$(NIMBLE_ROOT)/nimble/controller/include                \
+    -I$(NIMBLE_ROOT)/nimble/transport/ram/include             \
+    -I$(NIMBLE_ROOT)/nimble/drivers/nrf52/include             \
+    -I$(NRFX_ROOT)                                            \
+    -I$(NRFX_ROOT)/hal                                        \
+    -I$(NRFX_ROOT)/mdk                                        \
+    -I$(NRFX_ROOT)/drivers/include                            \
+    -I$(NRFX_ROOT)/templates/nRF52840                         \
+    -I$(NORDIC_ROOT)/dependencies                             \
+    -I$(NORDIC_ROOT)/drivers/clock                            \
+    -I$(NORDIC_ROOT)/libraries/app_error                      \
+    -I$(FREERTOS_ROOT)/Source/include                         \
+    -I$(OPENTHREAD_ROOT)/include                              \
+    $(NULL)
+endif # OPENTHREAD_EXAMPLES_NRF52840
+
+
+libnimble_a_SOURCES                           = \
+    $(NIMBLE_SRC)                               \
+    $(NULL)
 
 
 if OPENTHREAD_BUILD_COVERAGE

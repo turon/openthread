@@ -1853,6 +1853,7 @@ src/diag/Makefile
 src/posix/Makefile
 src/posix/platform/Makefile
 third_party/Makefile
+third_party/freertos/Makefile
 third_party/mbedtls/Makefile
 third_party/mynewt-nimble/Makefile
 examples/Makefile

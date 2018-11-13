@@ -47,6 +47,16 @@
 #include "nrf_802154_rx_buffer.h"
 #include "hal/nrf_egu.h"
 
+#define DEBUG_PIN_802154_EVT      28
+
+static inline void gpio_set(int pin)   { NRF_GPIO->OUTSET = (1 << pin); }
+static inline void gpio_clear(int pin) { NRF_GPIO->OUTCLR = (1 << pin); }
+static inline void gpio_init(int pin)
+{
+    NRF_GPIO->PIN_CNF[pin] = 1;
+    NRF_GPIO->DIRSET = (1 << pin);
+}
+
 
 /** Size of notification queue.
  *
@@ -436,6 +446,10 @@ void nrf_802154_swi_init(void)
     NVIC_SetPriority(SWI_IRQn, NRF_802154_SWI_PRIORITY);
     NVIC_ClearPendingIRQ(SWI_IRQn);
     NVIC_EnableIRQ(SWI_IRQn);
+
+#if DEBUG_PIN_802154_EVT >= 0
+    gpio_init(DEBUG_PIN_802154_EVT);
+#endif
 }
 
 void nrf_802154_swi_notify_received(uint8_t * p_data, int8_t power, int8_t lqi)
@@ -659,6 +673,10 @@ void nrf_802154_swi_cca_cfg_update(bool * p_result)
 
 void SWI_IRQHandler(void)
 {
+#if DEBUG_PIN_802154_EVT >= 0
+    gpio_set(DEBUG_PIN_802154_EVT);
+#endif
+
     if (nrf_egu_event_check(SWI_EGU, NTF_EVENT))
     {
         nrf_egu_event_clear(SWI_EGU, NTF_EVENT);
@@ -814,4 +832,8 @@ void SWI_IRQHandler(void)
             req_queue_ptr_increment(&m_req_r_ptr);
         }
     }
+
+#if DEBUG_PIN_802154_EVT >= 0
+    gpio_clear(DEBUG_PIN_802154_EVT);
+#endif
 }

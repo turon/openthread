@@ -58,6 +58,11 @@
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 
+#if OPENTHREAD_BLE_HOST_NIMBLE
+#include <nimble/nimble_port.h>
+#include "nimble/nimble_npl_os.h"
+#endif
+
 // clang-format off
 
 #define SHORT_ADDRESS_SIZE    2
@@ -218,6 +223,11 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 
 void nrf5RadioInit(void)
 {
+#if OPENTHREAD_BLE_HOST_NIMBLE
+    void nrf_802154_core_irq_handler(void);
+    ble_npl_hw_set_isr(RADIO_IRQn, (uint32_t)nrf_802154_core_irq_handler);
+#endif
+
     dataInit();
     nrf_802154_init();
 }

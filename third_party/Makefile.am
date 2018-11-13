@@ -63,6 +63,17 @@ if OPENTHREAD_BLE_HOST_NIMBLE
 SUBDIRS                                += \
     mynewt-nimble                         \
     $(NULL)
+
+if OPENTHREAD_EXAMPLES_NRF52840
+DIST_SUBDIRS                           += \
+    freertos                              \
+    $(NULL)
+
+SUBDIRS                                += \
+    freertos                              \
+    $(NULL)
+endif # OPENTHREAD_EXAMPLES_NRF52840
+
 endif # OPENTHREAD_BLE_HOST_NIMBLE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

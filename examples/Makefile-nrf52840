@@ -301,6 +301,35 @@ $(DIRECTORIES):
 	$(ECHO) "  MKDIR    $@"
 	@$(MKDIR_P) "$@"
 
+
+# JLinkGDBServer -rtos GDBServer/RTOSPlugin_FreeRTOS -device NRF52 -if SWD -port 3333 -singlerun 
+
+JLINK_DEV = NRF52
+JLINK_GDB_SERVER = JLinkGDBServer
+EXTRA_JTAG_CMD = -rtos GDBServer/RTOSPlugin_FreeRTOS
+GDB_CMD_FILE = .gdb_cmds
+APP_FILE_NAME = $(TopResultDir)/$(TargetTuple)/bin/ot-cli-ftd
+APP_FILE_HEX = $(TopResultDir)/$(TargetTuple)/bin/ot-cli-ftd.hex
+
+
+.PHONY: jlink
+jlink: $(APP_FILE_NAME)
+	# Trap CTRL-C from killing JLinkGDBServer in background
+	set -m
+	$(JLINK_GDB_SERVER) $(EXTRA_JTAG_CMD) -device $(JLINK_DEV) -if SWD -port 3333 -singlerun $(APP_FILE_NAME) > /dev/null &
+	set +m
+	echo "target remote localhost:3333"      >> $(GDB_CMD_FILE)
+	echo "mon reset"                         >> $(GDB_CMD_FILE)
+	echo "mon halt"                          >> $(GDB_CMD_FILE)
+	echo "load"                              >> $(GDB_CMD_FILE)
+	echo "bt"                                >> $(GDB_CMD_FILE)
+	arm-none-eabi-gdb -x $(GDB_CMD_FILE) 2>&1
+	rm $(GDB_CMD_FILE)
+
+nrfjprog: $(APP_FILE_NAME)
+	arm-none-eabi-objcopy -O ihex $(<) $(APP_FILE_HEX)
+	nrfjprog -f NRF52 --sectorerase  --reset --program $(APP_FILE_HEX)
+
 clean:
 	$(ECHO) "  CLEAN"
 	@$(RM_F) -r $(CLEAN_DIRS)

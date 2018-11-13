@@ -85,6 +85,18 @@ bool otSysPseudoResetWasRequested(void);
 void otSysProcessDrivers(otInstance *aInstance);
 
 /**
+ * This function starts the main loop for OpenThread's example applications.
+ *
+ * @note This function is not called by the OpenThread library. Instead, the 
+ *       example applications start the main loop of the system/RTOS 
+ *       as appropriate.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
+ */
+void otSysProcessRun(otInstance *aInstance);
+
+/**
  * This function is called whenever platform drivers needs processing.
  *
  * @note This function is not handled by the OpenThread library. Instead, the system/RTOS should handle this function

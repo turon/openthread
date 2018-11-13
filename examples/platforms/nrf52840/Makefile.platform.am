@@ -31,7 +31,6 @@
 #
 
 LDADD_COMMON                                                                                 += \
-    $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840.a                        \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_cc310/lib/libnrf_cc310_0.9.10.a \
     $(NULL)
 
@@ -44,3 +43,17 @@ LDFLAGS_COMMON                                                                  
     -T $(top_srcdir)/examples/platforms/nrf52840/nrf52840.ld                                    \
     $(NULL)
 endif
+
+
+if OPENTHREAD_BLE_HOST_NIMBLE
+LDADD_COMMON                                                                                += \
+    $(top_builddir)/third_party/freertos/libfreertos.a                                         \
+    $(top_builddir)/third_party/mynewt-nimble/libnimble.a                                      \
+    $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a                    \
+    $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840-nimble.a                \
+    $(NULL)
+else
+LDADD_COMMON                                                                                += \
+    $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840.a                       \
+    $(NULL)
+endif # OPENTHREAD_BLE_HOST_NIMBLE
