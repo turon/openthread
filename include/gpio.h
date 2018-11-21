@@ -6,6 +6,9 @@
 #define LED_3 15
 #define LED_4 16
 
+#define DEBUG_PIN_802154_MODE     15
+#define DEBUG_PIN_802154_EVT      16
+
 static inline void gpio_init(int pin)
 {
     (void)pin;

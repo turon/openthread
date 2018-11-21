@@ -47,16 +47,7 @@
 #include "nrf_802154_rx_buffer.h"
 #include "hal/nrf_egu.h"
 
-#define DEBUG_PIN_802154_EVT      28
-
-static inline void gpio_set(int pin)   { NRF_GPIO->OUTSET = (1 << pin); }
-static inline void gpio_clear(int pin) { NRF_GPIO->OUTCLR = (1 << pin); }
-static inline void gpio_init(int pin)
-{
-    NRF_GPIO->PIN_CNF[pin] = 1;
-    NRF_GPIO->DIRSET = (1 << pin);
-}
-
+#include <gpio.h>
 
 /** Size of notification queue.
  *

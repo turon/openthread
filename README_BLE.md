@@ -135,12 +135,11 @@ Note:
 ## Debug GPIO
 
 ```
-#define LED_2 14     // Radio mode: BLE=1, 802.15.4=0
-#define LED_3 15     // Sched slot: BLE=1, RAAL=0
+#define LED_2                     14  // Slot: (pulse on each slot, then hold 1=BLE, 0=RAAL)
+#define DEBUG_PIN_802154_MODE     15  // Radio Mode: 1=802.15.4 0=BLE
+#define DEBUG_PIN_802154_EVT      16  // 15.4 Event: envelope SWI IRQ
 
-#define DEBUG_PIN_802154_EVT      28
-
-#define MYNEWT_VAL_BLE_PHY_DBG_TIME_ADDRESS_END_PIN (29)
-#define MYNEWT_VAL_BLE_PHY_DBG_TIME_TXRXEN_READY_PIN (30)
+#define MYNEWT_VAL_BLE_PHY_DBG_TIME_ADDRESS_END_PIN (29)  // Rampup
+#define MYNEWT_VAL_BLE_PHY_DBG_TIME_TXRXEN_READY_PIN (30) 
 #define MYNEWT_VAL_BLE_PHY_DBG_TIME_WFR_PIN (31)
 ```

@@ -66,6 +66,7 @@
 
 #include "nrf_802154_core_hooks.h"
 
+#include <gpio.h>
 
 #define EGU_EVENT           NRF_EGU_EVENT_TRIGGERED15
 #define EGU_TASK            NRF_EGU_TASK_TRIGGER15
@@ -529,6 +530,11 @@ static bool ack_is_matched(void)
 /** Initialize radio peripheral. */
 static void nrf_radio_init(void)
 {
+#if DEBUG_PIN_802154_MODE >= 0
+    gpio_init(DEBUG_PIN_802154_MODE);
+    gpio_set(DEBUG_PIN_802154_MODE);
+#endif
+  
     nrf_radio_mode_set(NRF_RADIO_MODE_IEEE802154_250KBIT);
     nrf_radio_config_length_field_length_set(8);
     nrf_radio_config_preamble_length_set(NRF_RADIO_PREAMBLE_LENGTH_32BIT_ZERO);

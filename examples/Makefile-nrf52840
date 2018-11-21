@@ -316,15 +316,15 @@ APP_FILE_HEX = $(TopResultDir)/$(TargetTuple)/bin/ot-cli-ftd.hex
 jlink: $(APP_FILE_NAME)
 	# Trap CTRL-C from killing JLinkGDBServer in background
 	set -m
-	$(JLINK_GDB_SERVER) $(EXTRA_JTAG_CMD) -device $(JLINK_DEV) -if SWD -port 3333 -singlerun $(APP_FILE_NAME) > /dev/null &
+	$(JLINK_GDB_SERVER) $(EXTRA_JTAG_CMD) -device $(JLINK_DEV) -if SWD -singlerun > /dev/null &
 	set +m
-	echo "target remote localhost:3333"      >> $(GDB_CMD_FILE)
+	rm $(GDB_CMD_FILE)
+	echo "target remote:2331"                >> $(GDB_CMD_FILE)
 	echo "mon reset"                         >> $(GDB_CMD_FILE)
 	echo "mon halt"                          >> $(GDB_CMD_FILE)
-	echo "load"                              >> $(GDB_CMD_FILE)
+	echo "load $(APP_FILE_NAME)"             >> $(GDB_CMD_FILE)
 	echo "bt"                                >> $(GDB_CMD_FILE)
-	arm-none-eabi-gdb -x $(GDB_CMD_FILE) 2>&1
-	rm $(GDB_CMD_FILE)
+	arm-none-eabi-gdb -x $(GDB_CMD_FILE) $(APP_FILE_NAME) 2>&1
 
 nrfjprog: $(APP_FILE_NAME)
 	arm-none-eabi-objcopy -O ihex $(<) $(APP_FILE_HEX)
