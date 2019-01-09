@@ -120,7 +120,7 @@ extern "C" {
  *
  */
 #ifndef NRF_802154_IRQ_PRIORITY
-#define NRF_802154_IRQ_PRIORITY  0
+#define NRF_802154_IRQ_PRIORITY  3
 #endif
 
 /**
