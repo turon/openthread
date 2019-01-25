@@ -302,7 +302,7 @@ $(DIRECTORIES):
 	@$(MKDIR_P) "$@"
 
 
-# JLinkGDBServer -rtos GDBServer/RTOSPlugin_FreeRTOS -device NRF52 -if SWD -port 3333 -singlerun 
+# JLinkGDBServer -rtos GDBServer/RTOSPlugin_FreeRTOS -device NRF52 -if SWD -port 3333 -singlerun
 
 JLINK_DEV = NRF52
 JLINK_GDB_SERVER = JLinkGDBServer
@@ -318,7 +318,7 @@ jlink: $(APP_FILE_NAME)
 	set -m
 	$(JLINK_GDB_SERVER) $(EXTRA_JTAG_CMD) -device $(JLINK_DEV) -if SWD -singlerun > /dev/null &
 	set +m
-	rm $(GDB_CMD_FILE)
+	rm -f $(GDB_CMD_FILE)
 	echo "target remote:2331"                >> $(GDB_CMD_FILE)
 	echo "mon reset"                         >> $(GDB_CMD_FILE)
 	echo "mon halt"                          >> $(GDB_CMD_FILE)
